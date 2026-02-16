@@ -132,5 +132,3 @@ Para sugerir melhorias ou reportar problemas:
 Os templates deste repositório estão sob licença MIT.
 
 ---
-
-**Softlutions Templates** • Desenvolvido com ❤️ para acelerar projetos
