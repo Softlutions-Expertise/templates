@@ -1,134 +1,96 @@
 # Softlutions Templates
 
-> Repositório de templates padronizados para desenvolvimento de aplicações web
+Repositório de templates reutilizáveis e aplicações de exemplo para desenvolvimento web.
 
-Este repositório contém templates estruturados e documentados para acelerar o desenvolvimento de projetos, seguindo as melhores práticas e padrões de arquitetura.
-
----
-
-## 📦 Templates Disponíveis
-
-### Frontend
-
-| Template | Tecnologias | Descrição | Documentação |
-|----------|-------------|-----------|--------------|
-| [Next.js](./front-end/next) | Next.js 13+, TypeScript, Material-UI | Template completo para SPAs com App Router, autenticação JWT e CRUD | [📖 Standard](./front-end/next/PROJECT_STANDARD.md) · [🤖 Agents](./front-end/next/AGENTS.md) |
-
-### Backend
-
-| Template | Tecnologias | Descrição | Documentação |
-|----------|-------------|-----------|--------------|
-| [NestJS](./back-end/nest) | NestJS 10+, TypeScript, TypeORM, PostgreSQL | API REST com autenticação JWT, autorização e CRUD completo | [📖 Standard](./back-end/nest/PROJECT_STANDARD.md) · [🤖 Agents](./back-end/nest/AGENTS.md) |
-
----
-
-## 🥞 Stacks Combinadas
-
-Templates pré-configurados para trabalharem juntos:
-
-| Stack | Frontend | Backend | Documentação |
-|-------|----------|---------|--------------|
-| Next.js + NestJS | Next.js 13+ | NestJS 10+ | [📖 Ver Stack](./stacks/nextjs-nestjs/) |
-
----
-
-## 🚀 Começando
-
-Escolha o template ou stack que melhor se adapta ao seu projeto:
-
-### Usar apenas Frontend
-```bash
-cd front-end/next
-npm install
-cp .env.example .env
-npm run dev
-```
-
-### Usar apenas Backend
-```bash
-cd back-end/nest
-npm install
-cp .env.example .env
-make up
-make migrate
-```
-
-### Usar Stack Completa (Front + Back)
-Consulte a documentação específica da stack:
-- [Next.js + NestJS](./stacks/nextjs-nestjs/)
-
----
-
-## 📁 Estrutura do Repositório
+## 📁 Estrutura
 
 ```
 .
-├── front-end/          # Templates de frontend
-│   └── next/          # Next.js Template
-│       ├── README.md
-│       ├── PROJECT_STANDARD.md
-│       ├── AGENTS.md
-│       └── src/
-│
-├── back-end/           # Templates de backend
-│   └── nest/          # NestJS Template
-│       ├── README.md
-│       ├── PROJECT_STANDARD.md
-│       ├── AGENTS.md
-│       └── src/
-│
-├── stacks/             # Combinações de templates (Fullstack)
-│   └── nextjs-nestjs/ # Stack Next.js + NestJS
-│       └── README.md
-│
-└── README.md          # Este arquivo
+├── AGENTS.md              # ⚠️ INSTRUÇÕES CRÍTICAS para IAs
+├── PROJECT_STANDARD.md    # Padrões e convenções do projeto
+├── templates/             # Templates base reutilizáveis
+│   ├── nest/             # Template NestJS + TypeORM
+│   ├── next/             # Template Next.js + MUI
+│   └── report/           # Template PDF + Bull + MinIO
+└── apps/                 # Aplicações completas
+    └── expense-tracker/  # App exemplo usando os templates
+        ├── back/         # Backend NestJS
+        └── front/        # Frontend Next.js
 ```
 
----
+## 🚀 Templates Disponíveis
 
-## 🎯 Estrutura de Cada Template
+### `@softlutions/report-template`
 
-Cada template contém:
+Template para geração de relatórios PDF com fila de processamento.
 
-| Arquivo | Propósito |
-|---------|-----------|
-| `README.md` | Guia rápido de instalação e uso |
-| `PROJECT_STANDARD.md` | Arquitetura completa, padrões de código, exemplos |
-| `AGENTS.md` | Guia específico para assistentes de IA |
+**Stack:**
+- Puppeteer (PDF)
+- Bull + Redis (Fila)
+- MinIO (Storage)
+- date-fns (Datas)
 
----
-
-## 📝 Convenções Gerais
-
-Todos os templates seguem estas convenções:
-
-### Separador de Código
-```typescript
-// ----------------------------------------------------------------------
+**Uso:**
+```bash
+cd templates/report
+npm install
+npm run build
 ```
 
-### Naming Conventions
-| Tipo | Padrão | Exemplo |
-|------|--------|---------|
-| Componentes/Classes | PascalCase | `UserCard`, `AuthService` |
-| Interfaces | PascalCase + I | `IUser`, `IAuthPayload` |
-| Funções/Métodos | camelCase | `findAll`, `handleSubmit` |
-| Constantes | UPPER_SNAKE_CASE | `API_URL`, `JWT_SECRET` |
+Veja [templates/report/README.md](templates/report/README.md) para detalhes.
 
----
+## 🛠️ Apps
 
-## 🤝 Contribuição
+### Expense Tracker
 
-Para sugerir melhorias ou reportar problemas:
+Aplicação completa de controle de despesas demonstrando:
+- Autenticação JWT
+- CRUD com paginação (nestjs-paginate)
+- Relatórios PDF async (Bull + MinIO)
+- Docker multi-container
 
-1. Certifique-se de seguir os padrões estabelecidos nos `PROJECT_STANDARD.md`
-2. Atualize a documentação quando necessário
-3. Mantenha os templates funcionais e testados
+**Backend:**
+```bash
+cd apps/expense-tracker/back
+cp .env.example .env
+make up-build
+```
 
----
+**Frontend:**
+```bash
+cd apps/expense-tracker/front
+npm install
+npm run dev
+```
 
-## 📄 Licença
+## 📋 Convenções Importantes
 
-Os templates deste repositório estão sob licença MIT.
+1. **Apps são isolados** - Cada app tem seu próprio `package.json`, `docker-compose.yml`, etc.
+2. **Templates são independentes** - Nunca modifique um template para um caso específico
+3. **ValidationPipe** - NUNCA use `forbidNonWhitelisted: true` (quebra paginação)
+4. **Docker** - Use nomes únicos de containers por app
 
----
+## 📚 Documentação
+
+- **[AGENTS.md](AGENTS.md)** - Instruções obrigatórias para IAs
+- **[PROJECT_STANDARD.md](PROJECT_STANDARD.md)** - Padrões de código e arquitetura
+- **[templates/report/README.md](templates/report/README.md)** - Doc do template de relatórios
+
+## 🏗️ Stack Padrão
+
+### Backend
+- NestJS 10.x
+- PostgreSQL 15 + TypeORM
+- Redis 7 + Bull
+- MinIO
+- Puppeteer
+
+### Frontend
+- Next.js 14+
+- Material-UI v5/v6
+- Axios
+- Recharts
+
+## 📝 Licença
+
+MIT - Livre para uso e modificação.

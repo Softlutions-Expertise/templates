@@ -1,0 +1,7 @@
+- revisar arquivos de standard do front, back e report (foi gerado muita coisa fora do padrao)
+- melhorar logica de alditoria
+- melhroar template do relatório
+- vervisr codigo
+- subir servidor novo para testar aplicacoes
+- separar minio
+- testar geracao de novo modulo 

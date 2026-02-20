@@ -1,0 +1,50 @@
+Nível de Acesso:
+	Administrador Master
+Cargos:
+	Administrador TCE
+	Administrador Defensoria
+Vínculo com Unidade Escolar ou Secretaria?
+	Sem Vinculo
+
+
+Nível de Acesso:
+	Administrador Secretaria Municipal
+Cargos:
+	Secretário(a) de Educação
+	Gestor da Central de Vagas
+Vínculo com Unidade Escolar ou Secretaria?
+	Secretaria de Educação
+
+
+Nível de Acesso:
+	Defensoria
+Cargos:
+	Defensor Público
+	Assessor(a) da Defensoria
+	Analista da Defensoria
+	Técnico da Defensoria
+Vínculo com Unidade Escolar ou Secretaria?
+	Sem Vinculo
+
+
+Nível de Acesso:
+	Atendente Secretaria
+Cargos:
+	Assistente Administrativo
+	Auxiliar Administrativo
+	Atendente
+	Assessor
+Vínculo com Unidade Escolar ou Secretaria?
+	Secretaria Municipal
+
+
+Nível de Acesso:
+	Administrador Unidade Escolar
+Cargos:
+	Técnico em Educação
+	Analista em Educação
+	Diretor(a)
+	Secretário(a)
+	Coordenador(a) Pedagógico
+Vínculo com Unidade Escolar ou Secretaria?
+	Unidade Escolar

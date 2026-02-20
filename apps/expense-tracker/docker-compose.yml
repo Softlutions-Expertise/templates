@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  # Infrastructure
+  postgres:
+    image: postgres:15-alpine
+    container_name: expense-tracker-db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_DATABASE:-expense_tracker}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - expense-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: expense-tracker-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - expense-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: expense-tracker-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - expense-network
+
+  # Backend API
+  api:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    container_name: expense-tracker-api
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_DATABASE: ${DB_DATABASE:-expense_tracker}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8085}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MINIO_HOST: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-reports}
+    ports:
+      - "${API_PORT:-3001}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+    networks:
+      - expense-network
+    restart: unless-stopped
+
+  # Report Service (Microserviço)
+  report-service:
+    build:
+      context: ./report-service
+      dockerfile: Dockerfile
+    container_name: expense-tracker-report-service
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_DATABASE: ${DB_DATABASE:-expense_tracker}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MINIO_HOST: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-reports}
+      API_URL: http://api:3000/api
+    ports:
+      - "${REPORT_PORT:-3002}:3000"
+    depends_on:
+      - api
+      - redis
+      - minio
+    networks:
+      - expense-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  expense-network:
+    driver: bridge

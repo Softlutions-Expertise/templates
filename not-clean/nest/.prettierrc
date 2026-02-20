@@ -1,0 +1,16 @@
+{
+  "singleQuote": true,
+  "trailingComma": "all",
+  "importOrder": [
+    "^typeorm",
+    "^@nestjs/swagger",
+    "^uuid",
+    "^class-validator",
+    "^class-transformer",
+    "^\\.\\./helpers",
+    "^\\.\\./base",
+    "^\\.\\./entities",
+    "^\\.\\."
+  ],
+  "importOrderSeparation": true
+}

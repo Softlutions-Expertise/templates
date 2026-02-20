@@ -1,0 +1,44 @@
+version: '3.7'
+
+services:
+  # API Principal - Development
+  nest_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: default-route-openshift-image-registry.apps.ocpntx.defensoria.ro.def.br/central-vagas-dev/api-nest:dev
+
+  # Worker/Queue - Development
+  nest_queue_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    image: default-route-openshift-image-registry.apps.ocpntx.defensoria.ro.def.br/central-vagas-dev/api-queue-nest:dev
+
+  # API Principal - Staging
+  nest_stage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: default-route-openshift-image-registry.apps.ocpntx.defensoria.ro.def.br/central-vagas-stage/api-nest:stage
+
+  # Worker/Queue - Staging
+  nest_queue_stage:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    image: default-route-openshift-image-registry.apps.ocpntx.defensoria.ro.def.br/central-vagas-stage/api-queue-nest:stage
+
+  # API Principal - Production
+  nest_prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: default-route-openshift-image-registry.apps.ocpntx.defensoria.ro.def.br/central-vagas-prod/api-nest:prod
+
+  # Worker/Queue - Production
+  nest_queue_prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    image: default-route-openshift-image-registry.apps.ocpntx.defensoria.ro.def.br/central-vagas-prod/api-queue-nest:prod

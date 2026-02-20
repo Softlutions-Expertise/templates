@@ -28,39 +28,49 @@
 
 ## 🚀 Começando com esta Stack
 
+> ⚠️ **IMPORTANTE:** Ao criar um novo projeto, **SEMPRE** copie os arquivos de configuração do template base (package.json, tsconfig.json, docker-compose.yml, etc) e adapte apenas o necessário. **NUNCA** crie do zero.
+
 ### 1. Backend (NestJS)
 
 ```bash
-cd back-end/nest
+# Copie a pasta do template, não crie do zero!
+cp -r templates/back-end/nest meu-projeto-back
+cd meu-projeto-back
+
+# Ajuste apenas o nome no package.json
+# "name": "meu-projeto-back"
 
 # Instalação
 npm install
 cp .env.example .env
 
-# Com Docker (recomendado)
-make up
-make migrate
-
-# Sem Docker
-npm run start:dev  # Porta 3000
+# Com Docker (obrigatório ter docker-compose.yml)
+docker-compose up -d        # Sobe PostgreSQL
+npm run migration:up        # Executa migrations
+npm run start:dev           # Porta 3001
 ```
 
-Documentação: [NestJS Template](../../back-end/nest/PROJECT_STANDARD.md)
+Documentação: [NestJS Template](../../back-end/nest/PROJECT_STANDARD.md) · [🤖 Agents](../../back-end/nest/AGENTS.md)
 
 ### 2. Frontend (Next.js)
 
 ```bash
-cd front-end/next
+# Copie a pasta do template!
+cp -r templates/front-end/next meu-projeto-front
+cd meu-projeto-front
+
+# Ajuste apenas o nome no package.json
+# "name": "meu-projeto-front"
 
 # Instalação
 npm install
 cp .env.example .env
 
 # Desenvolvimento
-npm run dev        # Porta 8084
+npm run dev        # Porta 8085
 ```
 
-Documentação: [Next.js Template](../../front-end/next/PROJECT_STANDARD.md)
+Documentação: [Next.js Template](../../front-end/next/PROJECT_STANDARD.md) · [🤖 Agents](../../front-end/next/AGENTS.md)
 
 ---
 
@@ -125,6 +135,59 @@ templates/
 └── stacks/
     └── nextjs-nestjs/           # Esta documentação
         └── README.md
+```
+
+---
+
+## 🚨 Regras para Novos Projetos
+
+### 1. Copiar Templates (NUNCA criar do zero)
+
+```bash
+# ✅ FORMA CORRETA - Copiar template
+cp -r templates/back-end/nest meu-app-back
+cp -r templates/front-end/next meu-app-front
+
+# Ajustar apenas:
+# - package.json: alterar "name" e "description"
+# - .env.example: ajustar nomes de variáveis se necessário
+# - docker-compose.yml: ajustar nome do banco/serviço
+```
+
+### 2. Containerização Obrigatória
+
+**Backend DEVE ter:**
+- `docker-compose.yml` com PostgreSQL
+- `Dockerfile` (mesmo que básico)
+- `.env.example` completo
+
+**Frontend DEVE ter:**
+- `.env.example` com URL da API
+- `Dockerfile` (se for fazer deploy)
+
+### 3. Checklist de Criação
+
+```bash
+# Backend
+mkdir meu-app && cd meu-app
+cp -r templates/back-end/nest back
+cd back
+# Editar package.json (apenas name/description)
+cp .env.example .env
+# Editar .env com suas configurações
+docker-compose up -d
+npm install
+npm run migration:up
+npm run start:dev
+
+# Frontend (outro terminal)
+cp -r templates/front-end/next front
+cd front
+# Editar package.json (apenas name)
+cp .env.example .env
+# Editar .env com URL do backend
+npm install
+npm run dev
 ```
 
 ---
