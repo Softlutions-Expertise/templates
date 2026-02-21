@@ -1,0 +1,34 @@
+📢 *NOVAS VAGAS DISPONÍVEIS*
+
+🎯 Foram registradas novas vagas para creches na sua região!
+
+📊 *Resumo das vagas:*
+• Total de vagas: {{registroVagas.totalVagas}}
+• Escolas contempladas: {{registroVagas.totalEscolas}}
+{{#if registroVagas.faixaEtaria}}
+• Faixa etária: {{registroVagas.faixaEtaria}}
+{{/if}}
+
+🏫 *Principais escolas com vagas:*
+{{#each registroVagas.escolas}}
+• {{nome}} - {{quantidadeVagas}} vagas
+{{/each}}
+
+🔗 *Como solicitar:*
+• Acesse o sistema online
+• Procure a secretaria municipal
+{{#if secretariaMunicipal.contato.telefones}}
+• Ligue para: {{secretariaMunicipal.contato.telefones.0.numero}}
+{{/if}}
+
+⏰ *Horário de atendimento:*
+• Segunda a Sexta, 8h às 17h
+
+📍 *Endereço:*
+{{secretariaMunicipal.endereco.logradouro}}, {{secretariaMunicipal.endereco.numero}} - {{secretariaMunicipal.endereco.bairro}}
+
+⚠️ *IMPORTANTE:*
+As vagas são limitadas e preenchidas por ordem de chegada. Não perca tempo!
+
+---
+Central de Vagas de Creches

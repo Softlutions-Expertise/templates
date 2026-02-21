@@ -1,0 +1,23 @@
+🔄 *AGENDAMENTO REAGENDADO*
+
+📋 *Novo Agendamento:*
+• Protocolo: {{agendamento.id}}
+• Nova Data: {{dataFormatada}}
+• Novo Horário: {{horarioFormatado}}
+
+👤 *Responsável:* {{agendamento.nomeRes}}
+👶 *Criança:* {{agendamento.nomeCrianca}}
+
+🏢 *Local de Atendimento:*
+• {{agendamento.localAtendimento.nome}}
+• {{agendamento.localAtendimento.endereco.logradouro}}, {{agendamento.localAtendimento.endereco.numero}} - {{agendamento.localAtendimento.endereco.bairro}}
+{{#if agendamento.localAtendimento.contato.telefones}}
+• Tel: {{agendamento.localAtendimento.contato.telefones.0.numero}}
+{{/if}}
+
+⚠️ *Lembre-se:*
+• Chegue com 15 minutos de antecedência
+• Traga os documentos necessários
+
+---
+Central de Vagas de Creches

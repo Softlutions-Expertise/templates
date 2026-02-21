@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <title>Comprovante de Agendamento</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+    <link rel="stylesheet" href="./comprovante-agendamento.css" />
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+
+  <body
+    class="min-h-screen bg-background font-sans text-foreground antialiased __variable_dd2ae8"
+  >
+    <div></div>
+    <div class="relative flex min-h-screen flex-col">
+      <div class="flex-1">
+        <div class="relative flex min-h-screen flex-col">
+          <div class="flex h-[calc(100vh-100px)] w-full flex-1 flex-col">
+            <div>
+              <div>
+                <div dir="ltr" data-orientation="horizontal">
+                  <div style="opacity: 1; transform: none">
+                    <div
+                      data-state="inactive"
+                      data-orientation="horizontal"
+                      role="tabpanel"
+                      aria-labelledby="radix-:rj:-trigger-identificacao"
+                      hidden=""
+                      id="radix-:rj:-content-identificacao"
+                      tabindex="0"
+                      class="focus-visible:primary mt-2 rounded-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 h-full"
+                    ></div>
+                    <div
+                      data-state="inactive"
+                      data-orientation="horizontal"
+                      role="tabpanel"
+                      aria-labelledby="radix-:rj:-trigger-dadosPessoais"
+                      hidden=""
+                      id="radix-:rj:-content-dadosPessoais"
+                      tabindex="0"
+                      class="focus-visible:primary mt-2 rounded-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 h-full"
+                    ></div>
+                    <div
+                      data-state="active"
+                      data-orientation="horizontal"
+                      role="tabpanel"
+                      aria-labelledby="radix-:rj:-trigger-confirmacao"
+                      id="radix-:rj:-content-confirmacao"
+                      tabindex="0"
+                      class="focus-visible:primary mt-2 rounded-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 h-full"
+                    >
+                      <div
+                        class="ml-2 flex flex-col items-start justify-center gap-6 text-lg"
+                      >
+                        <div class="flex items-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="40"
+                            height="40"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="text-[#4FC779]"
+                          >
+                            <path
+                              d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
+                            ></path>
+                            <path d="m9 12 2 2 4-4"></path>
+                          </svg>
+                          <div class="ml-2">
+                            <div class="mb-1 font-bold">
+                              Agendamento realizado!
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <div class="mt-3">
+                            <span class="font-bold"
+                              >{{agendamento.responsavel.nome}}</span
+                            ><span
+                              >, seu atendimento com a Central de Vagas está
+                              previsto para o dia
+                            </span>
+                            <span class="font-bold"
+                              >{{agendamento.dataAgendamento}} às
+                              {{agendamento.horarioAgendamento}}hrs</span
+                            ><span>.</span>
+                          </div>
+                          <div class="mt-8">
+                            <div class="flex items-center">
+                              Local:⠀
+                              <div class="font-bold">
+                                {{agendamento.endereco.nome}}
+                              </div>
+                            </div>
+                            <div class="flex items-center">
+                              Endereço:⠀
+                              <div class="font-bold">
+                                {{agendamento.endereco.logradouro}}
+                              </div>
+                            </div>
+                            <div class="flex items-center">
+                              Número:⠀
+                              <div class="font-bold">
+                                {{agendamento.endereco.numero}}
+                              </div>
+                            </div>
+                            <div class="flex items-center">
+                              Bairro:⠀
+                              <div class="font-bold">
+                                {{agendamento.endereco.bairro}}
+                              </div>
+                            </div>
+                            <div class="flex items-center">
+                              Cidade:⠀
+                              <div class="font-bold">
+                                {{agendamento.endereco.cidade}}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="mt-8 flex items-center">
+                            Compareça com os seguintes documentos para inscrição
+                            na central única de vagas em creches municipais:
+                          </div>
+                          <div class="mt-3">
+                            <ul>
+                              <li class="font-bold">
+                                Certidão de nascimento ou documento de
+                                identificação da criança;
+                              </li>
+                            </ul>
+                            <ul>
+                              <li class="font-bold">
+                                CPF da mãe ou responsável legal;
+                              </li>
+                            </ul>
+                            <ul>
+                              <li class="font-bold">
+                                Cartão do SUS da criança;
+                              </li>
+                            </ul>
+                            <ul>
+                              <li class="font-bold">
+                                Comprovante de residência com CEP (ex: fatura de
+                                energia elétrica, água ou telefone);
+                              </li>
+                            </ul>
+                            <ul>
+                              <li class="font-bold">
+                                Documentos que comprovem os critérios de
+                                prioridade para a disponibilização da vaga, se
+                                aplicáveis.
+                              </li>
+                            </ul>
+                          </div>
+                          <div class="mr-64 mt-8 flex items-center">
+                            Obs: Caso a criança não more com os pais biológicos,
+                            o responsável legal deverá apresentar Termo de
+                            Guarda/Tutela (definitivo ou provisório). Casos
+                            especiais serão avaliados pela Central de Vagas.
+                            Para mais informações, entre em contato com a
+                            {{agendamento.secretariaMunicipal.nomeFantasia}}:
+                            {{agendamento.contato.telefoneNumero}}.
+                          </div>
+                          <div
+                            class="my-12 mr-28 flex items-center justify-center"
+                          >
+                            <img
+                              alt="Linhas"
+                              loading="lazy"
+                              width="300"
+                              height="100"
+                              decoding="async"
+                              data-nimg="1"
+                              class="pointer-events-none"
+                              style="color: transparent"
+                              src="data:image/webp;base64, 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"
+                            />
+                          </div>
+                          <div class="mb-1 font-bold">
+                            Critérios de atendimento preferencial nas creches
+                          </div>
+                          <div class="mb-8 mr-64 flex items-center">
+                            No momento do atendimento na Central de Vagas, a mãe
+                            ou responsável legal poderá apresentar documentos de
+                            comprovação dos critérios de prioridade para
+                            atendimento:
+                          </div>
+
+                          <table class="tableCriterios">
+                            <caption>
+                              Critérios
+                            </caption>
+                            <thead>
+                              <tr>
+                                <th>Prioridade</th>
+                                <th>Critério</th>
+                                <th>Exige Comprovação</th>
+                              </tr>
+                            </thead>
+
+                            <tbody>
+                              {{#each agendamento.criterios}}
+                              <tr>
+                                <td>
+                                  {{#if this.subPosicao}}
+                                  {{this.posicao}}.{{this.subPosicao}}º {{else}}
+                                  {{this.posicao}}º {{/if}}
+                                </td>
+                                <td>{{this.nome}}</td>
+                                <td>
+                                  {{#if this.exigirComprovacao}} Sim {{else}}
+                                  Não {{/if }}
+                                </td>
+                              </tr>
+                              {{/each}}
+                            </tbody>
+                          </table>
+                          <footer class="comprovante-dataEmissao">
+                            <p>
+                              {{agendamento.secretariaMunicipal.email}} ||
+                              Emitido: {{agendamento.dataEmissao}}
+                            </p>
+                          </footer>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

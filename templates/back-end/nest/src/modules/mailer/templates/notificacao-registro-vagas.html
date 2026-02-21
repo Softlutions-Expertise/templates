@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{#if plural}}Novas vagas{{else}}Nova vaga{{/if}} abertas - Central de Vagas de Creches</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .highlightdate {
+            font-weight: bold;
+            color: #a80000;
+        }
+
+        .message {
+            border-left: 4px solid #007bff;
+            padding-left: 10px;
+            margin-left: 10px;
+            text-align: justify;
+        }
+
+        .signature {
+            margin-top: 30px;
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+
+        .signature p {
+            margin: 10px 0;
+        }
+
+        .signature p:first-child {
+            font-weight: bold;
+            margin-top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <p>Prezado(a) <span class="highlight">{{interessado.name}}</span>,</p>
+
+        <div class="message">
+            <p>
+                Informamos o registro de <span class="highlight">{{ registroVaga.quantidadeVagas }}
+                    {{#if plural}}novas vagas{{else}}nova vaga{{/if}}</span> na
+                creche <span class="highlight">{{registroVaga.escola.nomeFantasia}}</span>. Sendo assim, essas vagas
+                ficam disponíveis para a reserva.
+            </p>
+
+            <hr />
+
+            <div>
+                <p><span class="highlight">Informações sobre o registro de vagas:</span></p>
+
+                <p>
+                    <span class="highlight">Ano Letivo:</span> {{ registroVaga.anoLetivo }} | <span
+                        class="highlight">Turma:</span> {{ registroVaga.turma.nome }}.
+                </p>
+
+                <p>
+                    <span class="highlight">Etapa:</span> {{ registroVaga.turma.etapa }}.
+                </p>
+
+
+
+                <p>
+                    <span class="highlight">Período:</span> de {{ registroVaga.turma.periodoInicial }} a {{
+                    registroVaga.turma.periodoFinal }}.
+                </p>
+
+                <p>
+                    <span class="highlight">Turno:</span> {{ registroVaga.turma.turno }}
+                    <span> | </span>
+                    <span class="highlight">Horário:</span> das
+                    {{ registroVaga.turma.horarioInicial }}
+                    às
+                    {{ registroVaga.turma.horarioFinal }}.
+                </p>
+
+
+                <p>
+                    <span class="highlight">Creche:</span> {{ registroVaga.escola.nomeFantasia }}.
+                </p>
+
+                <p>
+                    <span class="highlight">Data e hora do registro:</span> {{ registroVaga.dataHoraVaga }}.
+                </p>
+
+                <p>
+                    <span class="highlight">Servidor que fez o registro:</span> {{ registroVaga.servidor.nome }}.
+                </p>
+
+                <hr />
+
+            </div>
+        </div>
+
+        <div class="signature">
+            <p>Essa mensagem foi disparada automaticamente pelo sistema Gestão de Vagas em Creche.
+            </p>
+            <p>
+                Você recebeu este e-mail porque foi configurado como o endereço de recebimento de uma conta ativa com o
+                nível de acesso "Atendente de Secretaria" no sistema.
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

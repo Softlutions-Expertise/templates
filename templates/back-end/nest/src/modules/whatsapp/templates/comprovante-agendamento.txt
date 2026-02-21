@@ -1,0 +1,35 @@
+📅 *COMPROVANTE DE AGENDAMENTO*
+
+📋 *Dados do Agendamento:*
+• Data de Emissão: {{agendamento.dataEmissao}}
+• Data: {{agendamento.dataAgendamento}}
+• Horário: {{agendamento.horarioAgendamento}}
+
+👤 *Dados do Responsável:*
+• Nome: {{agendamento.responsavel.nome}}
+• Email: {{agendamento.responsavel.email}}
+• Telefone: {{agendamento.telefone}}
+
+👶 *Dados da Criança:*
+• Nome: {{agendamento.crianca.nome}}
+
+🏢 *Local de Atendimento:*
+• Nome: {{agendamento.localAtendimento.nome}}
+• Endereço: {{agendamento.localAtendimento.endereco.logradouro}}, {{agendamento.localAtendimento.endereco.numero}} - {{agendamento.localAtendimento.endereco.bairro}}
+• Cidade: {{agendamento.localAtendimento.endereco.cidade}}
+{{#if agendamento.exibirTelefoneLocalAtendimento}}
+• Telefone: {{agendamento.localAtendimento.contato.telefoneNumero}}
+{{/if}}
+
+🏛️ *Secretaria Municipal:*
+• {{agendamento.secretariaMunicipal.nomeFantasia}}
+• Telefone: {{agendamento.secretariaMunicipal.contato.telefoneNumero}}
+• E-mail: {{agendamento.secretariaMunicipal.contato.email}}
+
+⚠️ *IMPORTANTE:*
+• Chegue com 15 minutos de antecedência
+• Traga documentos originais
+• Em caso de impossibilidade, reagende com antecedência
+
+---
+Central de Vagas de Creches

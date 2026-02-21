@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Reserva de Vaga - Central de Vagas de Creches</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .highlightdate {
+            font-weight: bold;
+            color: #a80000;
+        }
+
+        .message {
+            border-left: 4px solid #007bff;
+            padding-left: 10px;
+            margin-left: 10px;
+            text-align: justify;
+        }
+
+        .signature {
+            margin-top: 30px;
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+
+        .signature p {
+            margin: 10px 0;
+        }
+
+        .signature p:first-child {
+            font-weight: bold;
+            margin-top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <p>Prezado(a) <span class="highlight">{{interessado.name}}</span>,</p>
+
+        <div class="message">
+            <p>
+                Informamos o registro de uma nova <span class="highlight"> Reserva de Vaga</span> na
+                creche <span class="highlight">{{reservaVaga.escola.nomeFantasia}}</span>.
+            </p>
+
+            <hr />
+
+            <div>
+                <p><span class="highlight">Informações sobre a Reserva de Vaga:</span></p>
+
+                <p>
+                    <span class="highlight">Ano Letivo:</span> {{ reservaVaga.anoLetivo }} | <span
+                        class="highlight">Turma:</span> {{ reservaVaga.turma.nome }}.
+                </p>
+
+                <p>
+                    <span class="highlight">Etapa:</span> {{ reservaVaga.turma.etapa.apelido }}.
+                </p>
+
+                <p>
+                    <span class="highlight">Turno:</span> {{ reservaVaga.turma.turno }}.
+                </p>
+
+                <p>
+                    <span class="highlight">Creche:</span> {{ reservaVaga.escola.nomeFantasia }}.
+                </p>
+
+                <p>
+                    <span class="highlight">Criança:</span> {{ reservaVaga.crianca.nome }} - {{reservaVaga.crianca.cpf}}.
+                </p>
+
+                <hr />
+
+            </div>
+        </div>
+
+        <div class="signature">
+            <p>Essa mensagem foi disparada automaticamente pelo sistema Gestão de Vagas em Creche.
+            </p>
+            <p>
+                Você recebeu este e-mail porque foi configurado como o endereço de recebimento de uma conta ativa com o
+                nível de acesso "Gestor de Creche" no sistema.
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

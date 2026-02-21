@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reserva de Vagas</title>
+
+  <link rel="stylesheet" href="https://meyerweb.com/eric/tools/css/reset/reset.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+
+
+  <link rel="stylesheet" href="./comprovante-reserva-vaga.css">
+</head>
+
+<body>
+  <section class="comprovante">
+    <header class="comprovante-header">
+      <div class="comprovante-header-escola">
+        <p class="escola-nome">{{reservaVaga.secretariaMunicipal.nomeFantasia}}</p>
+
+        <p><span>{{reservaVaga.secretariaMunicipal.logradouro}}</span> -
+          <span>{{reservaVaga.secretariaMunicipal.cep}}</span>
+        </p>
+        <p><span>{{reservaVaga.secretariaMunicipal.cidade}}</span> -
+          <span>{{reservaVaga.secretariaMunicipal.estado}}</span>
+        </p>
+        <p><span>{{reservaVaga.secretariaMunicipal.email}}</span></p>
+      </div>
+
+      <p class="header-reserva-vagas">
+        <span>Reserva de vagas</span> <br />
+        <span
+          style="font-weight: normal; font-size: 1.5rem; text-align: center; width: 100%; display: inline-block">Código:
+          {{reservaVaga.codigoReservaVaga}}</span>
+      </p>
+
+    </header>
+
+    <h1 class="title-comprovante">Comprovante de Reserva de Vaga</h1>
+
+
+    <section class="dados">
+      <h1>
+        <span class="before"></span>
+        <span>Dados da Criança</span>
+        <span class="after"></span>
+      </h1>
+
+
+      <dl>
+        <div>
+          <dt>Nome completo da criança</dt>
+          <dd>{{reservaVaga.crianca.nome}}</dd>
+        </div>
+
+        <div>
+          <dt>CPF</dt>
+          <dd>{{reservaVaga.crianca.cpf}}</dd>
+        </div>
+
+        <div>
+          <dt>Sexo</dt>
+          <dd>{{reservaVaga.crianca.sexo}}</dd>
+        </div>
+
+        <div>
+          <dt>Data de Nascimento</dt>
+          <dd>{{reservaVaga.crianca.dataNascimento}}</dd>
+        </div>
+
+        <div>
+          <dt>Nome do Responsável</dt>
+          <dd>{{reservaVaga.crianca.responsavelNome}}</dd>
+        </div>
+
+        <div>
+          <dt>CPF do Responsável</dt>
+          <dd>{{reservaVaga.crianca.responsavelCpf}}</dd>
+        </div>
+
+        <div>
+          <dt>Endereço</dt>
+          <dd><span>{{reservaVaga.crianca.logradouro}}</span>, n <span>{{reservaVaga.crianca.numero}}</span> -
+            <span>{{reservaVaga.crianca.bairro}}</span>
+          </dd>
+        </div>
+
+        <div>
+          <dt>Cidade/UF</dt>
+          <dd><span>{{reservaVaga.crianca.cidade}}</span> - <span>{{reservaVaga.crianca.estado}}</span></dd>
+        </div>
+
+        <div>
+          <dt>Critérios</dt>
+        </div>
+
+        <div>
+          <dt></dt>
+        </div>
+
+        <div>
+          <dt></dt>
+        </div>
+
+        <div>
+          <dt></dt>
+        </div>
+
+        {{#each reservaVaga.criterios}}
+        <div style="text-align: justify; vertical-align: top; margin-left: 10px; margin-right: 10px;">
+          <dd>{{this}}</dd>
+        </div>
+        {{/each}}
+
+      </dl>
+    </section>
+
+    <section class="dados">
+      <h1>
+        <span class="before"></span>
+        <span>Dados da Unidade Escolar</span>
+        <span class="after"></span>
+      </h1>
+
+      <dl>
+
+        <div>
+          <dt>Nome Fantasia</dt>
+          <dd>{{reservaVaga.escola.nomeFantasia}}</dd>
+        </div>
+
+        <div>
+          <dt>CNPJ</dt>
+          <dd>{{reservaVaga.escola.cnpj}}</dd>
+        </div>
+
+        <div>
+          <dt>CEP</dt>
+          <dd>{{reservaVaga.escola.cep}}</dd>
+        </div>
+
+        <div>
+          <dt>Endereço</dt>
+          <dd><span>{{reservaVaga.escola.logradouro}}</span>, n <span>{{reservaVaga.escola.numero}}</span> -
+            <span>{{reservaVaga.escola.bairro}}</span>
+          </dd>
+        </div>
+
+        <div>
+          <dt>{{reservaVaga.escola.telefone1.tipo}}</dt>
+          <dd>{{reservaVaga.escola.telefone1.numero}}</dd>
+        </div>
+
+        <div>
+          <dt>{{reservaVaga.escola.telefone2.tipo}}</dt>
+          <dd>{{reservaVaga.escola.telefone2.numero}}</dd>
+        </div>
+
+        <div>
+          <dt>E-mail</dt>
+          <dd>{{reservaVaga.escola.email}}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="dados">
+      <h1>
+        <span class="before"></span>
+        <span>Dados da Reserva</span>
+        <span class="after"></span>
+      </h1>
+
+      <dl>
+        <div>
+          <dt>Data da Reserva</dt>
+          <dd>{{reservaVaga.reserva.dataReserva}}</dd>
+        </div>
+
+        <div>
+          <dt>Hora da Reserva</dt>
+          <dd>{{reservaVaga.reserva.horaReserva}}</dd>
+        </div>
+
+        <div>
+          <dt>Funcionário Responsável</dt>
+          <dd>{{reservaVaga.reserva.funcionarioResponsavel}}</dd>
+        </div>
+
+        <div>
+          <dt>Ano Letivo</dt>
+          <dd>{{reservaVaga.reserva.anoLetivo}}</dd>
+        </div>
+
+        <div>
+          <dt>Etapa</dt>
+          <dd>{{reservaVaga.reserva.etapa}}</dd>
+        </div>
+
+        <div>
+          <dt>Turma</dt>
+          <dd>{{reservaVaga.reserva.turma}}</dd>
+        </div>
+
+        <div>
+          <dt>Turno</dt>
+          <dd>{{reservaVaga.reserva.turno}}</dd>
+        </div>
+
+        <div>
+          <dt>Resultado do Contato</dt>
+          <dd>{{reservaVaga.reserva.resultadoContato}}</dd>
+        </div>
+
+        <div>
+          <dt>Nome do Contato</dt>
+          <dd>{{reservaVaga.reserva.nomeContato}}</dd>
+        </div>
+
+        <div>
+          <dt>Telefone do Responsável</dt>
+          <dd>{{reservaVaga.reserva.telefoneResponsavel.numero}}</dd>
+        </div>
+
+        <div>
+          <dt>E-mail do Responsável</dt>
+          <dd>{{reservaVaga.reserva.emailResponsavel}}</dd>
+        </div>
+
+        <div>
+          <dt>Tipo de Contato</dt>
+          <dd>{{reservaVaga.reserva.tipoContato}}</dd>
+        </div>
+
+      </dl>
+    </section>
+
+    <section class="dados">
+      <h1>
+        <span class="before"></span>
+        <span>Prazo Para a Matrícula</span>
+        <span class="after"></span>
+      </h1>
+
+      <dl>
+        <p>Por favor, dirija-se à Unidade Escolar dentro do prazo de <span>03 (três)</span> dias
+          para efetivar a matrícula. Caso não seja efetivada dentro do prazo, a reserva poderá ser cancelada.</p>
+      </dl>
+    </section>
+  </section>
+</body>
+<footer class="comprovante-footer">
+  <p>{{reservaVaga.secretariaMunicipal.email}} || Emitido: {{reservaVaga.dataEmissao}}</p>
+</footer>
+
+</html>

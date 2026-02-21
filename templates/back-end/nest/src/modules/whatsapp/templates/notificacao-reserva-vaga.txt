@@ -1,0 +1,32 @@
+🔔 *NOTIFICAÇÃO - RESERVA DE VAGA*
+
+📋 *Status da Reserva:* {{reservaVaga.status}}
+• Número da Reserva: {{reservaVaga.numero}}
+• Data da Reserva: {{reservaVaga.dataReserva}}
+
+👤 *Responsável:* {{reservaVaga.pessoa.nome}}
+• CPF: {{reservaVaga.pessoa.cpf}}
+
+🏫 *Escola:*
+• Nome: {{reservaVaga.escola.nome}}
+• Endereço: {{reservaVaga.escola.endereco.logradouro}}, {{reservaVaga.escola.endereco.numero}} - {{reservaVaga.escola.endereco.bairro}}
+{{#if reservaVaga.escola.contato.telefones}}
+• Telefone: {{reservaVaga.escola.contato.telefones.0.numero}}
+{{/if}}
+
+{{#if reservaVaga.observacoes}}
+📝 *Observações importantes:*
+{{reservaVaga.observacoes}}
+{{/if}}
+
+⚠️ *Próximos passos:*
+• Aguarde contato da escola para confirmação
+• Mantenha os documentos atualizados
+• Acompanhe o status pelo sistema
+
+📞 *Em caso de dúvidas:*
+• Secretaria: {{reservaVaga.secretariaMunicipal.telefone}}
+• Endereço: {{reservaVaga.secretariaMunicipal.endereco.logradouro}}, {{reservaVaga.secretariaMunicipal.endereco.numero}} - {{reservaVaga.secretariaMunicipal.endereco.bairro}}
+
+---
+Central de Vagas de Creches

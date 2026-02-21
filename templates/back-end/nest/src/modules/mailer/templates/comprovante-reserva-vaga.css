@@ -1,0 +1,232 @@
+.comprovante {
+  font-family: 'Inter', sans-serif;
+
+  max-width: 1300px;
+  margin: 3.375rem auto;
+}
+
+@media print {
+  html,
+  body {
+    font-size: 10px;
+  }
+}
+
+.comprovante-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.comprovante-header {
+  margin: 3.375rem 0;
+
+  gap: 2rem;
+
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap-reverse;
+
+  flex-direction: row;
+  text-align: unset;
+}
+
+.comprovante-header .comprovante-header-escola {
+  flex: 1;
+}
+
+.comprovante-header-escola p {
+  font-weight: 500;
+  line-height: 1.5rem;
+  letter-spacing: 0rem;
+  font-size: 1.25rem;
+}
+
+.comprovante-header .header-reserva-vagas {
+  justify-self: flex-end;
+
+  font-weight: 800;
+  color: #464646;
+
+  border: 1px solid #0057ff;
+  border-right: none;
+
+  border-top-left-radius: 6.25rem;
+  border-bottom-left-radius: 6.25rem;
+
+  align-self: flex-start;
+
+  padding: 4.6875rem 6rem 4.6875rem 4rem;
+  font-size: 2.5rem;
+}
+
+.comprovante .title-comprovante {
+  font-weight: 600;
+  line-height: 2.4375rem;
+  letter-spacing: 0rem;
+  text-align: center;
+  color: #464646;
+  margin: 3.3125rem 0;
+  font-size: 2rem;
+}
+
+.comprovante .dados h1 {
+  font-weight: 500;
+  line-height: 2.125rem;
+  letter-spacing: 0rem;
+
+  display: flex;
+  align-items: center;
+
+  gap: 1.125rem;
+
+  color: #464646;
+
+  font-size: 1.75rem;
+  margin: 3.3125rem 0;
+}
+
+.comprovante .dados h1 span {
+  flex-shrink: 0;
+}
+
+.comprovante .dados h1 .before {
+  content: '';
+  display: block;
+
+  width: 3.3125rem;
+  border-top: 2px solid #379dff;
+}
+
+.comprovante .dados h1 .after {
+  content: '';
+  display: block;
+
+  width: 100%;
+  border-top: 2px solid #379dff;
+
+  flex-shrink: 1;
+}
+
+.comprovante .dados dl {
+  /* display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
+    row-gap: 2.125rem; */
+
+  padding-left: 2.625rem;
+  padding-right: 2rem;
+}
+
+.comprovante .dados dl div {
+  width: 100%;
+  max-width: calc(25% - 10px);
+  display: inline-block;
+
+  margin-bottom: 1.75rem;
+}
+
+.comprovante .dados dl dt {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.1875rem;
+  letter-spacing: 0rem;
+  color: #464646;
+}
+
+.comprovante .dados dl dd {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.1875rem;
+  letter-spacing: 0rem;
+
+  color: #464646;
+}
+
+.comprovante .dados dl p {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.1875rem;
+  letter-spacing: 0rem;
+  
+  margin-bottom: 1.75rem;
+
+  color: #464646;
+}
+
+.comprovante .dados dl p span {
+  color: #ff0000;
+}
+
+/* Responsividade */
+
+@media screen and (max-width: 1099px) {
+  .comprovante .dados dl div {
+    max-width: calc(50% - 10px);
+
+    margin-bottom: 1.75rem;
+  }
+}
+
+@media screen and (min-width: 1000px) and (max-width: 1099px) {
+  .comprovante-header .header-reserva-vagas {
+    padding: 4.2rem 5rem 4.2rem 3rem;
+    font-size: 2.25rem;
+  }
+}
+
+@media screen and (min-width: 400px) and (max-width: 999px) {
+  .comprovante-header .header-reserva-vagas {
+    padding: 3rem 4rem 3rem 2rem;
+    font-size: 2rem;
+  }
+}
+@media screen and (max-width: 399px) {
+  .comprovante-header .header-reserva-vagas {
+    font-size: 1.5rem;
+  }
+}
+
+@media screen and (max-width: 959px) {
+  .comprovante-header {
+    flex-direction: column-reverse;
+    text-align: center;
+  }
+}
+
+.comprovante-header-escola {
+  padding-left: 2.265rem;
+}
+
+.comprovante-header-escola p.escola-nome {
+  font-size: 2rem;
+  line-height: 2.420625rem;
+  font-weight: 500;
+}
+
+@media screen and (max-width: 999px) {
+  .comprovante-header-escola {
+    padding-left: 0;
+  }
+
+  .comprovante-header-escola p {
+    font-size: 1.125rem;
+  }
+
+  .comprovante-header-escola p.escola-nome {
+    font-size: 1.5rem;
+    line-height: 2.420625rem;
+  }
+}
+
+@media screen and (max-width: 999px) {
+  .comprovante .title-comprovante {
+    margin: 1.5rem 0;
+    font-size: 1.5rem;
+  }
+
+  .comprovante .dados h1 {
+    font-size: 1.45rem;
+    margin: 2rem 0;
+  }
+}
