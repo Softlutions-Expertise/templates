@@ -1,0 +1,38 @@
+/* Webkit */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus input:-webkit-autofill,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  border: none !important;
+
+  -webkit-box-shadow: 0 0 0px 1000px #f9fbfd00 inset !important;
+
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* styles/globals.css */
+
+/* Estiliza a barra de rolagem principal da página */
+::-webkit-scrollbar {
+  width: 10px; /* Largura da barra de rolagem */
+}
+
+/* Estiliza o rastro da barra de rolagem (fundo) */
+::-webkit-scrollbar-track {
+  background: #f1f1f100; /* Cor de fundo */
+}
+
+/* Estiliza o manipulador da barra de rolagem (a parte que você arrasta) */
+::-webkit-scrollbar-thumb {
+  background: #888; /* Cor do manipulador */
+  border-radius: 10px; /* Arredondamento das bordas */
+}
+
+/* Muda a cor do manipulador ao passar o mouse */
+::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Cor do manipulador ao passar o mouse */
+}
