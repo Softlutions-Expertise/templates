@@ -1,163 +1,148 @@
 # Expense Tracker
 
-Aplicação completa de controle de despesas com arquitetura de microserviços.
+Sistema completo de gestão de despesas pessoais com relatórios avançados.
 
-## Arquitetura
-
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Frontend      │────▶│   Backend API   │◀────│  Report Service │
-│  (Next.js)      │     │   (NestJS)      │     │  (NestJS+Bull)  │
-│   :8085         │     │    :3001        │     │    :3002        │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-                               │                         │
-                               ▼                         ▼
-                        ┌─────────────────┐     ┌─────────────────┐
-                        │   PostgreSQL    │     │      MinIO      │
-                        │     :5432       │     │  :9000/:9001    │
-                        └─────────────────┘     └─────────────────┘
-                               │
-                               ▼
-                        ┌─────────────────┐
-                        │     Redis       │
-                        │     :6379       │
-                        └─────────────────┘
-```
-
-### Serviços
-
-| Serviço | Porta | Descrição |
-|---------|-------|-----------|
-| Frontend | 8085 | Next.js + Material-UI |
-| Backend API | 3001 | NestJS - Auth, Expenses, Categories, Dashboard |
-| Report Service | 3002 | NestJS - Geração async de PDFs |
-| PostgreSQL | 5432 | Banco de dados |
-| Redis | 6379 | Fila Bull |
-| MinIO | 9000/9001 | Storage de PDFs |
-
-## Estrutura
+## 🏗️ Arquitetura
 
 ```
-apps/expense-tracker/
-├── back/                    # Backend API (Core)
-│   ├── src/apps/
-│   │   ├── auth/
-│   │   ├── expenses/
-│   │   ├── categories/
-│   │   └── dashboard/
-│   ├── docker-compose.yml
-│   └── package.json
-├── report-service/          # Microserviço de Relatórios
-│   ├── src/reports/
-│   ├── docker-compose.yml
-│   └── package.json
-├── front/                   # Frontend Next.js
-│   └── package.json
-├── docker-compose.yml       # Orquestra todos os serviços
-├── Makefile
-└── README.md
+┌─────────────────────────────────────────────────────────────┐
+│                        DOCKER COMPOSE                        │
+├─────────────────────────────────────────────────────────────┤
+│  Frontend (Next.js)    →  http://localhost:8085             │
+│  Backend API (NestJS)  →  http://localhost:3001/api/v1      │
+│  Report Service        →  http://localhost:3002             │
+│  PostgreSQL            →  localhost:5432                    │
+│  Redis                 →  localhost:6379                    │
+│  MinIO                 →  http://localhost:9001             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Fluxo de Geração de Relatórios
+## 🚀 Início Rápido
 
-1. Frontend chama `POST /reports` no **Report Service**
-2. Report Service adiciona job na fila **Bull+Redis**
-3. Processor busca dados na **Backend API**
-4. Gera PDF com **Puppeteer**
-5. Faz upload para **MinIO**
-6. Retorna URL pré-assinada (24h)
-
-## Quick Start
-
-### 1. Configurar variáveis
+### Subir TUDO com um comando:
 
 ```bash
-cp .env.example .env
-# Edite .env se necessário
+cd apps/expense-tracker
+make up
 ```
 
-### 2. Iniciar todos os serviços
+Isso irá:
+1. Buildar todas as imagens Docker
+2. Subir PostgreSQL, Redis, MinIO
+3. Subir Report Service
+4. Subir Backend API
+5. Subir Frontend
+
+Aguarde ~30-60 segundos para todos os serviços inicializarem.
+
+### Verificar se está tudo funcionando:
 
 ```bash
-make up-build
+make health
 ```
 
-### 3. Acessar
+### Acessar a aplicação:
 
-- Frontend: http://localhost:8085
-- API Docs: http://localhost:3001/api/docs
-- MinIO Console: http://localhost:9001 (minioadmin/minioadmin)
+- **Frontend:** http://localhost:8085
+- **API:** http://localhost:3001/api/v1
+- **Swagger:** http://localhost:3001/api/docs
+- **MinIO Console:** http://localhost:9001 (minioadmin/minioadmin)
 
-### 4. Comandos úteis
+### Parar tudo:
 
 ```bash
-# Logs
-make logs-api        # API
-make logs-report     # Report Service
-
-# Desenvolvimento local
-make dev-back        # Backend
-make dev-report      # Report Service
-make dev-front       # Frontend
-
-# Parar tudo
 make down
 ```
 
-## Desenvolvimento Individual
-
-### Backend API
+### Limpar tudo (remove volumes):
 
 ```bash
-cd back
-cp .env.example .env
-npm install
-npm run start:dev
+make clean
 ```
 
-### Report Service
+## 📋 Comandos Disponíveis
+
+### Docker (Produção)
+
+| Comando | Descrição |
+|---------|-----------|
+| `make up` | Sobe todos os serviços |
+| `make down` | Para todos os serviços |
+| `make clean` | Para e remove volumes |
+| `make logs` | Mostra logs de todos os serviços |
+| `make logs-back` | Logs do backend |
+| `make logs-report` | Logs do report service |
+| `make ps` | Status dos containers |
+| `make health` | Verifica saúde dos serviços |
+
+### Desenvolvimento Local
+
+| Comando | Descrição |
+|---------|-----------|
+| `make install` | Instala dependências de todos os projetos |
+| `make build` | Build de todos os projetos |
+| `make dev-infra` | Só infraestrutura (DB, Redis, MinIO) |
+| `make dev-back` | Backend em modo desenvolvimento |
+| `make dev-report` | Report Service em modo desenvolvimento |
+| `make dev-front` | Frontend em modo desenvolvimento |
+
+## 🐳 Serviços
+
+### Backend API (Porta 3001)
+- NestJS
+- PostgreSQL
+- Redis (filas)
+- MinIO (storage)
+
+### Report Service (Porta 3002)
+- Express + React JSX SSR
+- Geração de relatórios PDF/HTML
+- Independente do backend
+
+### Frontend (Porta 8085)
+- Next.js
+- Material UI
+- Responsivo
+
+## 📊 Relatórios
+
+O sistema possui 2 tipos de relatórios:
+
+1. **Relatório de Despesas** - Gerado pelo backend com Puppeteer
+2. **Relatório de Auditoria** - Gerado pelo Report Service com React JSX
+
+### Fluxo do Relatório de Auditoria:
+```
+Frontend → Backend → Report Service → HTML → Frontend
+```
+
+## 🛠️ Desenvolvimento
+
+Para desenvolver localmente sem Docker:
 
 ```bash
-cd report-service
-cp .env.example .env
-npm install
-npm run start:dev
+# Terminal 1 - Infraestrutura
+make dev-infra
+
+# Terminal 2 - Report Service
+cd report-service && npm run dev
+
+# Terminal 3 - Backend
+cd back && npm run start:dev
+
+# Terminal 4 - Frontend
+cd front && npm run dev
 ```
 
-### Frontend
+## 🔧 Configurações
 
-```bash
-cd front
-npm install
-npm run dev
-```
+As configurações estão no `docker-compose.yml`:
 
-## API Endpoints
+- **Banco de dados:** PostgreSQL (expense_tracker)
+- **Redis:** Porta 6379
+- **MinIO:** Portas 9000 (API) e 9001 (Console)
+- **Report Service:** URL interna `http://report-service:3002`
 
-### Backend (`:3001`)
-- `POST /api/auth/login`
-- `POST /api/auth/register`
-- `GET /api/expenses` (paginado)
-- `GET /api/categories`
-- `GET /api/dashboard/summary`
+## 📝 Licença
 
-### Report Service (`:3002`)
-- `POST /reports` - Criar relatório
-- `GET /reports` - Listar relatórios
-- `GET /reports/:id` - Status do relatório
-- `GET /reports/:id/download` - Download PDF
-
-## Tecnologias
-
-- **Backend**: NestJS, TypeORM, PostgreSQL
-- **Report**: NestJS, Bull, Puppeteer, MinIO
-- **Frontend**: Next.js, Material-UI, Recharts
-- **Infra**: Docker, Redis, MinIO
-
-## Templates Usados
-
-Este app demonstra o uso dos templates em `templates/`:
-- `templates/nest/` - Base do backend
-- `templates/report/` - Conceitos de PDF + Bull + MinIO
-
-> **Nota**: Os templates são apenas referência. Cada app tem sua própria implementação independente.
+MIT

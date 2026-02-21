@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "jsx": "react-jsx",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -19,7 +20,7 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@/*": ["src/*"],
-      "@apps/*": ["src/apps/*"],
+      "@modules/*": ["src/modules/*"],
       "@database/*": ["src/database/*"],
       "@helpers/*": ["src/helpers/*"],
       "@infrastructure/*": ["src/infrastructure/*"],

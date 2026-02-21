@@ -1,17 +1,28 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiExcludeController } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Public } from './infrastructure';
 
-@ApiTags('Health')
+@ApiExcludeController()
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private appService: AppService) {}
 
+  @Get()
   @Public()
-  @Get('health')
-  @ApiOperation({ summary: 'Health check endpoint' })
-  getHealth(): { status: string; timestamp: string } {
-    return this.appService.getHealth();
+  index() {
+    return this.appService.index();
+  }
+
+  @Get('/health')
+  @Public()
+  health() {
+    return 'running';
+  }
+
+  @Get('/health/env')
+  @Public()
+  healthEnv() {
+    return this.appService.env();
   }
 }

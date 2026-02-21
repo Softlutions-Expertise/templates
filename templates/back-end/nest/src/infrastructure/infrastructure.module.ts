@@ -1,22 +1,26 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthenticationModule } from './authentication/authentication.module';
-import { JwtAuthGuard } from './authentication/guards/jwt-auth.guard';
-import { AuthorizationModule } from './authorization/authorization.module';
+import { AcessoControlModule } from './acesso-control/acesso-control.module';
 import { ArquivoModule } from './arquivo/arquivo.module';
+import { AuthenticationModule, JwtAuthGuard } from './authentication';
+import { AuthorizationModule } from './authorization';
+import { DatabaseContextModule } from './database-context/database-context-module.module';
 
 @Module({
   imports: [
+    ArquivoModule,
+    DatabaseContextModule,
     AuthenticationModule,
     AuthorizationModule,
-    ArquivoModule,
+    AcessoControlModule,
   ],
+  controllers: [],
   providers: [
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
   ],
-  exports: [AuthenticationModule, AuthorizationModule, ArquivoModule],
+  exports: [],
 })
 export class InfrastructureModule {}

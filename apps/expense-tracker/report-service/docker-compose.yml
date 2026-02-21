@@ -6,30 +6,15 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: expense-tracker-report-service
-    environment:
-      NODE_ENV: production
-      PORT: 3000
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USERNAME: ${DB_USERNAME:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_DATABASE: ${DB_DATABASE:-expense_tracker}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      MINIO_HOST: minio
-      MINIO_PORT: 9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
-      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-reports}
-      API_URL: http://api:3000/api
     ports:
-      - "${REPORT_PORT:-3002}:3000"
-    networks:
-      - expense-network
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - NODE_ENV=production
     restart: unless-stopped
+    networks:
+      - expense-tracker-network
 
-# Usa a mesma network do expense-tracker
 networks:
-  expense-network:
+  expense-tracker-network:
     external: true
-    name: expense-network

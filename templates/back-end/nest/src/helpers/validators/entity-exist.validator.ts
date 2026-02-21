@@ -1,51 +1,75 @@
 import {
-  registerDecorator,
-  ValidationOptions,
-  ValidatorConstraint,
-  ValidatorConstraintInterface,
   ValidationArguments,
+  ValidatorConstraintInterface,
 } from 'class-validator';
-import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import {
+  DataSource,
+  EntitySchema,
+  FindOptionsWhere,
+  ObjectType,
+} from 'typeorm';
+import { isObject } from '@nestjs/common/utils/shared.utils';
 
-@Injectable()
-@ValidatorConstraint({ async: true })
-export class EntityExistConstraint implements ValidatorConstraintInterface {
-  constructor(private dataSource: DataSource) {}
-
-  async validate(value: any, args: ValidationArguments): Promise<boolean> {
-    const [entityClass, field = 'id'] = args.constraints;
-
-    if (!value) {
-      return true;
-    }
-
-    const repository = this.dataSource.getRepository(entityClass);
-    const entity = await repository.findOne({
-      where: { [field]: value },
-    });
-
-    return !!entity;
-  }
-
-  defaultMessage(args: ValidationArguments): string {
-    const [entityClass, field = 'id'] = args.constraints;
-    return `${entityClass.name} with ${field} ${args.value} does not exist`;
-  }
+export interface EntityExistValidationArguments<E> extends ValidationArguments {
+  constraints: [
+    ObjectType<E> | EntitySchema<E> | string,
+    (
+      | ((
+          validationArguments: ValidationArguments,
+          value: object,
+        ) => FindOptionsWhere<E>)
+      | keyof E
+    ),
+    (
+      | ((
+          validationArguments: ValidationArguments,
+          value: object,
+          entityCount: number,
+        ) => boolean)
+      | string
+      | undefined
+    ),
+    number | undefined,
+  ];
 }
 
-export function EntityExist(
-  entityClass: any,
-  field?: string,
-  validationOptions?: ValidationOptions,
-) {
-  return function (object: object, propertyName: string) {
-    registerDecorator({
-      target: object.constructor,
-      propertyName: propertyName,
-      options: validationOptions,
-      constraints: [entityClass, field],
-      validator: EntityExistConstraint,
+export abstract class EntityExistValidator
+  implements ValidatorConstraintInterface
+{
+  protected constructor(protected readonly dataSource: DataSource) {}
+
+  public async validate<E>(
+    value: object[],
+    args: EntityExistValidationArguments<E>,
+  ) {
+    const [EntityClass, findCondition = args.property, validationCondition] =
+      args.constraints;
+
+    const entityCount = await this.dataSource.getRepository(EntityClass).count({
+      where:
+        typeof findCondition === 'function'
+          ? findCondition(args, value)
+          : ({
+              [findCondition]:
+                validationCondition && typeof validationCondition !== 'function'
+                  ? isObject(value)
+                    ? value[validationCondition]
+                    : value
+                  : value,
+            } as any),
     });
-  };
+
+    args.constraints[3] = entityCount;
+
+    return typeof validationCondition === 'function'
+      ? validationCondition(args, value, entityCount)
+      : !!entityCount;
+  }
+
+  public defaultMessage(args: ValidationArguments) {
+    const [EntityClass] = args.constraints;
+    const entity = EntityClass.name || 'Entity';
+    const text = Array.isArray(args.value) ? 'Some' : 'The';
+    return `${text} Entity:${entity.toLowerCase()} nao existe`;
+  }
 }

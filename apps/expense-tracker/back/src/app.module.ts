@@ -4,12 +4,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { DatabaseConfig } from './database/database.config';
 import { AppController } from './app.controller';
-import { AuthModule } from './apps/auth/auth.module';
-import { CategoriesModule } from './apps/categories/categories.module';
-import { ExpensesModule } from './apps/expenses/expenses.module';
-import { DashboardModule } from './apps/dashboard/dashboard.module';
-import { AuditoriaModule } from './apps/auditoria/auditoria.module';
-import { ReportsModule } from './apps/reports/reports.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { ExpensesModule } from './modules/expenses/expenses.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { AuditoriaModule } from './modules/auditoria/auditoria.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 // ----------------------------------------------------------------------
 

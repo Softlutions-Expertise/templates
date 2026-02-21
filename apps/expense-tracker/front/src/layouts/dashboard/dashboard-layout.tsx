@@ -20,6 +20,7 @@ import {
   Avatar,
   Menu,
   MenuItem,
+  Collapse,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -30,6 +31,9 @@ import {
   Logout,
   AccountCircle,
   History,
+  ExpandLess,
+  ExpandMore,
+  Description,
 } from '@mui/icons-material';
 import { useTheme, useMediaQuery } from '@mui/material';
 
@@ -37,17 +41,32 @@ import { useAuth } from '@hooks/use-auth';
 
 // ----------------------------------------------------------------------
 
-interface DashboardLayoutProps {
-  children: ReactNode;
+interface MenuItem {
+  path?: string;
+  label: string;
+  icon: React.ReactNode;
+  children?: MenuItem[];
 }
 
-const MENU_ITEMS = [
+const MENU_ITEMS: MenuItem[] = [
   { path: '/dashboard/', label: 'Resumo', icon: <Dashboard /> },
   { path: '/dashboard/expenses/', label: 'Despesas', icon: <Receipt /> },
   { path: '/dashboard/categories/', label: 'Categorias', icon: <Category /> },
-  { path: '/dashboard/reports/', label: 'Relatórios', icon: <Assessment /> },
-  { path: '/dashboard/auditoria/', label: 'Auditoria', icon: <History /> },
+  {
+    label: 'Relatórios',
+    icon: <Assessment />,
+    children: [
+      { path: '/dashboard/reports/', label: 'Despesas', icon: <Description /> },
+      { path: '/dashboard/reports/auditoria/', label: 'Auditoria', icon: <History /> },
+    ],
+  },
 ];
+
+// ----------------------------------------------------------------------
+
+interface DashboardLayoutProps {
+  children: ReactNode;
+}
 
 // ----------------------------------------------------------------------
 
@@ -60,6 +79,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [reportsOpen, setReportsOpen] = useState(pathname.includes('/reports/'));
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -69,7 +89,61 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     setAnchorEl(null);
   };
 
-  const currentTab = MENU_ITEMS.findIndex((item) => pathname === item.path);
+  const isActive = (path: string) => pathname === path;
+  const isParentActive = (item: MenuItem) => {
+    if (item.path) return isActive(item.path);
+    return item.children?.some(child => child.path && pathname.startsWith(child.path));
+  };
+
+  const handleNavigate = (path: string) => {
+    router.push(path);
+    setDrawerOpen(false);
+  };
+
+  const toggleReports = () => {
+    setReportsOpen(!reportsOpen);
+  };
+
+  const renderMenuItem = (item: MenuItem, isSubItem = false) => {
+    const hasChildren = item.children && item.children.length > 0;
+    const active = isParentActive(item);
+
+    if (hasChildren) {
+      return (
+        <div key={item.label}>
+          <ListItem disablePadding>
+            <ListItemButton
+              selected={active}
+              onClick={toggleReports}
+              sx={{ pl: isSubItem ? 4 : 2 }}
+            >
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.label} />
+              {reportsOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={reportsOpen} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              {item.children?.map((child) => renderMenuItem(child, true))}
+            </List>
+          </Collapse>
+        </div>
+      );
+    }
+
+    return (
+      <ListItem key={item.path} disablePadding>
+        <ListItemButton
+          selected={item.path ? isActive(item.path) : false}
+          onClick={() => item.path && handleNavigate(item.path)}
+          sx={{ pl: isSubItem ? 4 : 2 }}
+        >
+          <ListItemIcon>{item.icon}</ListItemIcon>
+          <ListItemText primary={item.label} />
+        </ListItemButton>
+      </ListItem>
+    );
+  };
 
   const renderDrawer = (
     <Box sx={{ width: 280 }}>
@@ -79,22 +153,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </Typography>
       </Box>
       <List>
-        {MENU_ITEMS.map((item) => (
-          <ListItem key={item.path} disablePadding>
-            <ListItemButton
-              selected={pathname === item.path}
-              onClick={() => {
-                router.push(item.path);
-                setDrawerOpen(false);
-              }}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        {MENU_ITEMS.map((item) => renderMenuItem(item))}
       </List>
     </Box>
+  );
+
+  // Para navegação mobile (bottom nav), mostrar apenas itens principais
+  const flatMenuItems = MENU_ITEMS.flatMap(item => 
+    item.children 
+      ? item.children.map(child => ({ ...child, parentLabel: item.label }))
+      : [item]
+  );
+
+  const currentTab = flatMenuItems.findIndex((item) => 
+    item.path ? pathname === item.path : false
   );
 
   return (
@@ -191,10 +263,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <BottomNavigation
             value={currentTab}
             onChange={(_, newValue) => {
-              router.push(MENU_ITEMS[newValue].path);
+              const item = flatMenuItems[newValue];
+              if (item.path) router.push(item.path);
             }}
           >
-            {MENU_ITEMS.map((item) => (
+            {flatMenuItems.map((item) => (
               <BottomNavigationAction
                 key={item.path}
                 label={item.label}

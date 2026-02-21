@@ -1,49 +1,24 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('files')
-export class Arquivo {
+@Entity('arquivo')
+export class ArquivoEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  readonly id!: string;
 
-  @Column({ name: 'original_name' })
-  originalName: string;
+  //
 
-  @Column({ name: 'file_name' })
-  fileName: string;
+  @Column({ name: 'access_token', type: 'text' })
+  accessToken: string | null;
 
-  @Column({ name: 'mime_type' })
-  mimeType: string;
+  @Column({ name: 'nome_arquivo', type: 'text' })
+  nomeArquivo: string | null;
 
-  @Column({ type: 'bigint' })
-  size: number;
+  @Column({ name: 'tipo_arquivo', type: 'text' })
+  tipoArquivo: string | null;
 
-  @Column()
-  url: string;
+  @Column({ name: 'name_size_file', type: 'text' })
+  nameSizeFile: string | null;
 
-  @Column()
-  bucket: string;
-
-  @Column()
-  path: string;
-
-  @Column({ name: 'entity_type', nullable: true })
-  entityType: string;
-
-  @Column({ name: 'entity_id', nullable: true })
-  entityId: string;
-
-  @Column({ name: 'created_by', nullable: true })
-  createdBy: string;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  @Column({ name: 'byte_string', type: 'text' })
+  byteString: string | null;
 }

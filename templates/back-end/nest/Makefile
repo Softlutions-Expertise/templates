@@ -1,25 +1,31 @@
-.PHONY: up down logs shell migrate
+.PHONY: up
+
+upgrade:
+	git submodule update --remote --force --merge;
 
 up:
-	docker-compose up -d
+	docker compose up -d
 
-build:
-	docker-compose up -d --build
+up-build:
+	docker compose up -d --build
 
 down:
-	docker-compose down
+	docker compose down
+
+cleanup:
+	docker compose down -v;
+	sudo rm -rf ./node_volumes;
+	sudo rm -rf ./volumes;
+	sudo rm -rf ./dist;
 
 logs:
-	docker-compose logs -f api
+	docker compose logs -f api
 
-shell:
-	docker-compose exec api sh
+bash:
+	docker compose exec api bash
 
-migrate:
-	docker-compose exec api npm run migration:up
+build:
+	npm run build
 
-migrate-create:
-	docker-compose exec api npm run migration:create src/database/migrations/$(name)
-
-migrate-generate:
-	docker-compose exec api npm run migration:generate src/database/migrations/$(name)
+ps:
+	docker compose ps

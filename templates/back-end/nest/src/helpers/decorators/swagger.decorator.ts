@@ -11,16 +11,12 @@ import {
 } from '@nestjs/swagger';
 import { DefaultException } from '../functions/default-exception';
 
-// ----------------------------------------------------------------------
-
 type QueryObject = {
   name: string;
   type?: any;
   enum?: any;
   required?: boolean;
 };
-
-// ----------------------------------------------------------------------
 
 export function GetDoc(
   tag: string,
@@ -54,8 +50,6 @@ export function GetDoc(
   return applyDecorators(...decorators);
 }
 
-// ----------------------------------------------------------------------
-
 export function PostDoc(tag: string, role: string, dto: any) {
   return applyDecorators(
     ApiTags(tag),
@@ -72,8 +66,6 @@ export function PostDoc(tag: string, role: string, dto: any) {
     ApiResponse({ status: 500, description: 'Erro interno do servidor' }),
   );
 }
-
-// ----------------------------------------------------------------------
 
 export function PatchDoc(tag: string, role: string, dto: any) {
   return applyDecorators(
@@ -95,8 +87,6 @@ export function PatchDoc(tag: string, role: string, dto: any) {
     ApiResponse({ status: 500, description: 'Erro interno do servidor' }),
   );
 }
-
-// ----------------------------------------------------------------------
 
 export function DeleteDoc(tag: string, role: string) {
   return applyDecorators(

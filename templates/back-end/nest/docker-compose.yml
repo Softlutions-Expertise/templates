@@ -1,15 +1,13 @@
-version: '3.8'
-
 services:
   api:
     build:
       context: .
       dockerfile: Dockerfile
-    command: sh -c "npm install && npm run start:dev"
+    command: sh -c "npm install && npm run build && npm run start:dev"
     volumes:
-      - .:/app
-      - /app/node_modules
-    working_dir: /app
+      - .:/code
+      - /code/node_modules
+    working_dir: /code
     env_file:
       - .env
     ports:
@@ -17,8 +15,37 @@ services:
     depends_on:
       - postgres
       - minio
+      - redis
     networks:
-      - api-template-net
+      - central-vagas-net
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "npm install && npm run build && npm run start:worker"
+    volumes:
+      - .:/code
+      - /code/node_modules
+    working_dir: /code
+    env_file:
+      - .env
+    environment:
+      - WORKER_MODE=true
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - central-vagas-net
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./volumes/redis:/data:z
+    networks:
+      - central-vagas-net
 
   postgres:
     image: docker.io/postgres:15
@@ -31,22 +58,23 @@ services:
     volumes:
       - ./volumes/postgres:/var/lib/postgresql/data:z
     networks:
-      - api-template-net
+      - central-vagas-net
 
   minio:
     image: docker.io/minio/minio
     command: server /data --console-address ":9001"
+
     environment:
-      MINIO_ROOT_USER: '${MINIO_ACCESS_KEY}'
-      MINIO_ROOT_PASSWORD: '${MINIO_SECRET_KEY}'
+      MINIO_ROOT_USER: 'teste'
+      MINIO_ROOT_PASSWORD: 'Teste@123'
     ports:
       - '9000:9000'
       - '9001:9001'
     volumes:
       - ./volumes/minio:/data:z
     networks:
-      - api-template-net
+      - central-vagas-net
 
 networks:
-  api-template-net:
+  central-vagas-net:
     driver: bridge

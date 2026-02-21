@@ -1,48 +1,82 @@
-import { Controller, Post, Body, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiParam, ApiTags } from '@nestjs/swagger';
+import { Public } from '../../infrastructure';
+import { AcessoControl } from '../../infrastructure/acesso-control';
+import { ResolveAcessoControl } from '../../infrastructure/acesso-control/decorators';
 import { AuthService } from './auth.service';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
-import { JwtAuthGuard } from '../../infrastructure/authentication/guards/jwt-auth.guard';
-import { CurrentUser } from '../../infrastructure/authentication/decorators/current-user.decorator';
-import { ICurrentUser } from '../../infrastructure/authentication/authentication.service';
-import { Public } from '../../infrastructure/authentication/decorators/public.decorator';
 
-@ApiTags('Password Management')
-@Controller('auth/password')
+const tryParseJson = (str: string) => {
+  try {
+    const parsed = JSON.parse(str);
+    return parsed;
+  } catch (error) {}
+  return str;
+};
+
+@ApiTags('Autenticação')
+@Controller('/auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
-  @Post('forgot')
-  @ApiOperation({ summary: 'Request password reset' })
-  async forgotPassword(@Body() dto: ForgotPasswordDto) {
-    await this.authService.sendPasswordResetEmail(dto.email);
-    return { message: 'If the email exists, a reset link has been sent' };
+  @ApiBearerAuth()
+  @Get('/whoami')
+  async getWhoAmI(@ResolveAcessoControl() acessoControl: AcessoControl) {
+    return this.authService.getWhoAmI(acessoControl);
   }
 
   @Public()
-  @Post('reset')
-  @ApiOperation({ summary: 'Reset password with token' })
-  async resetPassword(@Body() dto: ResetPasswordDto) {
-    await this.authService.resetPassword(dto.token, dto.newPassword);
-    return { message: 'Password reset successfully' };
+  @ApiBearerAuth()
+  @ApiBody({
+    schema: {
+      type: 'object',
+    },
+  })
+  @ApiParam({
+    name: 'action',
+    description: 'Ação a ser executada',
+    required: true,
+  })
+  @Post('/check-can-perform/:action')
+  async checkCanPerform(
+    @ResolveAcessoControl() acessoControl: AcessoControl,
+    @Param('action') action: string,
+    @Body() payload: any,
+  ) {
+    return this.authService.checkCanPerform(acessoControl, action, payload);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post('change')
+  @Public()
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Change password (authenticated)' })
-  async changePassword(
-    @CurrentUser() user: ICurrentUser,
-    @Body() dto: ChangePasswordDto,
+  @ApiBody({
+    schema: {
+      type: 'object',
+    },
+  })
+  @ApiParam({
+    name: 'targetIdJson',
+    description: 'ID do registro alvo',
+    required: true,
+  })
+  @ApiParam({
+    name: 'action',
+    description: 'Ação a ser executada no alvo',
+    required: true,
+  })
+  @Post('/check-can-reach/:targetIdJson/:action')
+  async checkCanReachTarget(
+    @ResolveAcessoControl() acessoControl: AcessoControl,
+    @Param('action') action: any,
+    @Param('targetIdJson') targetIdJson: string,
+    @Body() payload: any,
   ) {
-    await this.authService.changePassword(
-      user.id,
-      dto.currentPassword,
-      dto.newPassword,
+    const targetId = tryParseJson(targetIdJson);
+
+    return this.authService.checkCanReachTarget(
+      acessoControl,
+      action,
+      targetId,
+      payload,
     );
-    return { message: 'Password changed successfully' };
   }
 }

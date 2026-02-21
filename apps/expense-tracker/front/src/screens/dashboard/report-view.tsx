@@ -73,7 +73,7 @@ export function ReportView() {
   return (
     <Box>
       <Typography variant="h5" sx={{ mb: 3 }}>
-        Relatórios
+        Relatório de Despesas
       </Typography>
 
       <Card sx={{ mb: 3 }}>

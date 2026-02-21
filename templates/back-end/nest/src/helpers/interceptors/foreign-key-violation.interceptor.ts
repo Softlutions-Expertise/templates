@@ -11,8 +11,6 @@ import { catchError, switchMap } from 'rxjs/operators';
 import { QueryFailedError } from 'typeorm';
 import { extractReference } from '../functions/extract-reference';
 
-// ----------------------------------------------------------------------
-
 @Injectable()
 export class ForeignKeyViolationInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {

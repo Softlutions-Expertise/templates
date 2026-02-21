@@ -1,3 +1,5 @@
+.env
+
 # compiled output
 /dist
 /node_modules
@@ -26,25 +28,22 @@ lerna-debug.log*
 *.launch
 .settings/
 *.sublime-workspace
+
+# IDE - VSCode
+.vscode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# Environment
-.env
-.env.local
-.env.*.local
+/volumes
+src/database/typeorm.config.ts
 
-# Database volumes
-/volumes/postgres/*
-!/volumes/postgres/.gitkeep
-/volumes/redis/*
-!/volumes/redis/.gitkeep
-/volumes/minio/*
-!/volumes/minio/.gitkeep
+# Sentry Config File
+.sentryclirc
 
-# Uploads temp
-/uploads
-/temp
+#whatsapp
+# Ignore WhatsApp session files
+.wwebjs_auth
+RemoteAuth-whatsapp-dpe-api

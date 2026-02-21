@@ -1,118 +1,122 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
-import { User } from '../base/entities/user.entity';
-import { PasswordReset } from './entities/password-reset.entity';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import { AcessoControl } from '../../infrastructure/acesso-control/core/acesso-control';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-    @InjectRepository(PasswordReset)
-    private passwordResetRepository: Repository<PasswordReset>,
-  ) {}
+  constructor(private moduleRef: ModuleRef) {}
 
-  async sendPasswordResetEmail(email: string): Promise<void> {
-    const user = await this.userRepository.findOne({
-      where: { email, isActive: true },
-    });
-
-    if (!user) {
-      // Don't reveal if email exists
-      return;
-    }
-
-    // Generate token
-    const token = randomBytes(32).toString('hex');
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours
-
-    // Save token
-    const passwordReset = this.passwordResetRepository.create({
-      userId: user.id,
-      token,
-      expiresAt,
-    });
-
-    await this.passwordResetRepository.save(passwordReset);
-
-    // TODO: Send email with reset link
-    // For now, just log the token (in production, send via email)
-    console.log(`Password reset token for ${email}: ${token}`);
+  async getWhoAmI(acessoControl: AcessoControl) {
+    return acessoControl.getWhoAmI();
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
-    const passwordReset = await this.passwordResetRepository.findOne({
-      where: {
-        token,
-        usedAt: null,
-        expiresAt: new Date(),
-      },
-    });
+  async checkCanPerform(
+    acessoControl: AcessoControl,
+    action: string,
+    checkPayload?: any,
+  ) {
+    let can = false;
 
-    if (!passwordReset) {
-      throw new BadRequestException('Invalid or expired token');
+    const statement = acessoControl.getStatementForAction(<any>action);
+
+    if (statement) {
+      if (statement.kind === 'check') {
+        const getDtoClass = statement.getDtoClass;
+
+        if (getDtoClass) {
+          if (checkPayload) {
+            const validatorClass = getDtoClass();
+
+            try {
+              const dto = plainToInstance(validatorClass, checkPayload, {});
+
+              const errors = await validate(validatorClass);
+
+              if (errors.length === 0) {
+                can = await acessoControl.checkCanPerform(
+                  statement.action,
+                  dto,
+                );
+              }
+            } catch (error) {}
+          }
+        } else {
+          can = await acessoControl.checkCanPerform(statement.action);
+        }
+      } else {
+        throw new BadRequestException(
+          "A funcionalidade 'checkCanPerform' só pode ser usado para statements do tipo 'check'.",
+        );
+      }
     }
 
-    // Check if expired
-    if (new Date() > passwordReset.expiresAt) {
-      throw new BadRequestException('Token has expired');
-    }
-
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update user password
-    await this.userRepository.update(passwordReset.userId, {
-      password: hashedPassword,
-    });
-
-    // Mark token as used
-    await this.passwordResetRepository.update(passwordReset.id, {
-      usedAt: new Date(),
-    });
+    return {
+      can,
+    };
   }
 
-  async changePassword(
-    userId: string,
-    currentPassword: string,
-    newPassword: string,
-  ): Promise<void> {
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-    });
+  async checkCanReachTarget(
+    acessoControl: AcessoControl,
+    action: string,
+    targetId: any,
+    checkPayload?: any,
+  ) {
+    let can = false;
 
-    if (!user) {
-      throw new NotFoundException('User not found');
+    const statement = acessoControl.getStatementForAction(<any>action);
+
+    if (statement) {
+      if (statement.kind === 'filter') {
+        try {
+          const getDtoClass = statement.getDtoClass;
+
+          if (getDtoClass) {
+            if (checkPayload) {
+              const validatorClass = this.moduleRef.get(getDtoClass());
+
+              const dto = plainToInstance(validatorClass, checkPayload, {});
+
+              const errors = await validate(validatorClass);
+
+              if (errors.length === 0) {
+                can = await acessoControl.checkCanReachTarget(
+                  statement.action,
+                  null,
+                  targetId,
+                  <any>dto,
+                );
+
+                return {
+                  can,
+                  _checkStep: '2',
+                };
+              }
+            }
+          }
+        } catch (error) {}
+
+        return acessoControl
+          .checkCanReachTarget(statement.action, null, targetId, null)
+          .then((can) => ({
+            can,
+            _checkStep: '1.0',
+          }))
+          .catch(() => ({
+            can: false,
+            _checkStep: '1.1',
+          }));
+      } else {
+        throw new BadRequestException(
+          "A funcionalidade 'checkCanReachTarget' só pode ser usado para statements do tipo 'filter'.",
+        );
+      }
     }
 
-    // Verify current password
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) {
-      throw new UnauthorizedException('Current password is incorrect');
-    }
-
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update password
-    await this.userRepository.update(userId, {
-      password: hashedPassword,
-    });
-  }
-
-  async cleanupExpiredTokens(): Promise<void> {
-    await this.passwordResetRepository.delete({
-      expiresAt: LessThan(new Date()),
-      usedAt: null,
-    });
+    return {
+      can,
+      _checkStep: '0',
+    };
   }
 }

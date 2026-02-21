@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { Global, Module } from '@nestjs/common';
 import { ArquivoService } from './arquivo.service';
-import { Arquivo } from './entities/arquivo.entity';
+import { MinioModule } from './minio/minio.module';
 
+@Global()
 @Module({
-  imports: [TypeOrmModule.forFeature([Arquivo])],
+  imports: [MinioModule],
+  controllers: [],
   providers: [ArquivoService],
   exports: [ArquivoService],
 })

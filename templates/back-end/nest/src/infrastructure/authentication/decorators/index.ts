@@ -1,2 +1,3 @@
-export * from './current-user.decorator';
-export * from './public.decorator';
+export * from './current-funcionario';
+export * from './needs-auth';
+export * from './public';

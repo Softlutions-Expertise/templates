@@ -1,9 +1,0 @@
-version: "3.7"
-
-services:
-  application:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: runtime
-    image: 192.168.12.31:5000/ifro/central-vagas-reporter-service:staging
