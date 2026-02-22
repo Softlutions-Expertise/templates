@@ -57,7 +57,7 @@ export class IntegrationAccessTokenController {
     @ResolveAcessoControl() acessoControl: AcessoControl,
     @Paginate() query: PaginateQuery,
   ): Promise<Paginated<IntegrationAccessTokenEntity>> {
-    return this.service.findAll(acessoControl, query);
+    return this.service.findAll(query);
   }
 
   @Post()

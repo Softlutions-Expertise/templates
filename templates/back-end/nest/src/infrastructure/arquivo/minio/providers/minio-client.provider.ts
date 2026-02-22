@@ -9,7 +9,7 @@ export const MINIO_CLIENT_PROVIDER = {
 
   useFactory: async () => {
     return new Minio.Client({
-      endPoint: process.env.MINIO_HOST,
+      endPoint: process.env.MINIO_ENDPOINT,
       port: parseInt(process.env.MINIO_PORT),
       useSSL: process.env.MINIO_USE_SSL === 'true',
       accessKey: process.env.MINIO_ACCESS_KEY,

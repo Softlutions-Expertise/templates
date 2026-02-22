@@ -4,27 +4,18 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
-import {
-  IntegrationAccessTokenService,
-  isCDVAccessTokenV1,
-} from '../../modules/integrations/integration-access-token/integration-access-token.service';
 import { ColaboradorEntity } from '../../modules/pessoa/entities/colaborador.entity';
 import { ICurrentColaborador } from './decorators';
-import { IdpConnectGovBrService } from './idp-connect-govbr/idp-connect-govbr.service';
 
 @Injectable()
 export class AuthenticationService {
   constructor(
-    private idpConnectService: IdpConnectGovBrService,
-    private integrationAccessTokenService: IntegrationAccessTokenService,
+    private jwtService: JwtService,
     @Inject('COLABORADOR_REPOSITORY')
     private colaboradorRepository: Repository<ColaboradorEntity>,
   ) {}
-
-  getOpenIdConfiguration() {
-    return this.idpConnectService.getOpenIdConfiguration();
-  }
 
   private async getCurrentColaboradorByCpf(
     cpf: string,
@@ -71,58 +62,22 @@ export class AuthenticationService {
   async getCurrentColaboradorByAccessToken(
     accessToken?: string,
   ): Promise<ICurrentColaborador> {
-    if (typeof accessToken === 'string') {
-      if (isCDVAccessTokenV1(accessToken)) {
-        const integrationAccessToken =
-          await this.integrationAccessTokenService.findOneByToken(
-            null,
-            accessToken,
-          );
-
-        if (!integrationAccessToken) {
-          throw new UnauthorizedException(
-            'Integration Access Token do not exists.',
-          );
-        }
-
-        if (!integrationAccessToken.ativo) {
-          throw new UnauthorizedException('Inactive Integration Access Token.');
-        }
-
-        if (
-          integrationAccessToken.validoAte &&
-          new Date() > integrationAccessToken.validoAte
-        ) {
-          throw new UnauthorizedException('Expired Integration Access Token.');
-        }
-
-        if (!integrationAccessToken.herdaPermissoesDeFuncionario) {
-          throw new UnauthorizedException(
-            'Unsupported Integration Access Token: herdaPermissoesDeColaborador is required.',
-          );
-        }
-
-        const cpf =
-          integrationAccessToken.herdaPermissoesDeFuncionario.pessoa.cpf;
-
-        return this.getCurrentColaboradorByCpf(cpf);
-      } else if (process.env.ENABLE_MOCK_ACCESS_TOKEN === 'true') {
-        const cpfMockMatch = accessToken.match(/^mock\.cpf\.(\d{11})$/);
-
-        if (cpfMockMatch) {
-          const cpf = cpfMockMatch[1];
-          return this.getCurrentColaboradorByCpf(cpf);
-        }
-      }
-
-      const { cpf } = await this.idpConnectService.loginWithAccessToken(
-        accessToken,
-      );
-
-      return this.getCurrentColaboradorByCpf(cpf);
+    if (!accessToken) {
+      return null;
     }
 
-    return null;
+    try {
+      // Verificar JWT
+      const payload = this.jwtService.verify(accessToken);
+      
+      if (payload.cpf) {
+        return this.getCurrentColaboradorByCpf(payload.cpf);
+      }
+      
+      return null;
+    } catch (error) {
+      return null;
+    }
   }
 
   /**

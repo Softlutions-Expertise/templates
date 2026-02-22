@@ -1,8 +1,6 @@
 import {
-  ForbiddenException,
   Inject,
   Injectable,
-  NotImplementedException,
 } from '@nestjs/common';
 import { ItemBucketMetadata } from 'minio';
 import PQueue from 'p-queue';
@@ -10,7 +8,6 @@ import pRetry from 'p-retry';
 import * as sharp from 'sharp';
 import slug from 'slug';
 import { v4 } from 'uuid';
-import { AcessoControl } from '../acesso-control';
 import { MinioClient } from './minio/providers/minio-client.provider';
 
 interface ArquivoServiceMetadataInput {
@@ -49,249 +46,157 @@ type IObjectMetadataBase = {
   'actor-id': string | null;
 };
 
-type IObjectMetadataKindPessoaFotoPerfil = IObjectMetadataBase & {
+type IObjectMetadataPessoaFotoPerfil = IObjectMetadataBase & {
   kind: FileKind.PESSOA_FOTO_PERFIL;
   'pessoa-id': string;
 };
 
-type IObjectMetadataKindGenericoDocumento = IObjectMetadataBase & {
+type IObjectMetadataGenericoDocumento = IObjectMetadataBase & {
   kind: FileKind.GENERICO_DOCUMENTO;
-  'documento-id': string;
   'entidade-tipo': string;
   'entidade-id': string;
 };
 
 type IObjectMetadata =
-  | IObjectMetadataKindPessoaFotoPerfil
-  | IObjectMetadataKindGenericoDocumento;
+  | IObjectMetadataPessoaFotoPerfil
+  | IObjectMetadataGenericoDocumento;
 
-const buildObjectNamePessoa = (idPessoa: string) => {
-  return `pessoa::${idPessoa}::foto-perfil::${v4()}`;
-};
-
-const buildObjectNameGenericoDocumento = (
-  entidadeTipo: string,
-  entidadeId: string,
-  documentoId: string,
-) => {
-  return `generico::${entidadeTipo}::${entidadeId}::documento::${documentoId}::${v4()}`;
-};
-
-class ForbiddenFileViewException extends ForbiddenException {
-  constructor(meta: IObjectMetadata) {
-    super(
-      `Permissão negada para visualizar esse recurso (kind: ${meta.kind}).`,
-    );
-  }
+interface SaveFileFromBase64Input {
+  kind: FileKind;
+  file: ArquivoServiceMetadataInput;
+  meta: Record<string, string>;
 }
 
 @Injectable()
 export class ArquivoService {
-  #submitImageQueue = new PQueue({
-    concurrency: 20,
-    timeout: 90_000,
-    throwOnTimeout: true,
-  });
-
-  #processImageQueue = new PQueue({
-    concurrency: 3,
-    timeout: 30_000,
-    throwOnTimeout: true,
-  });
-
-  private async processImageFromBuffer(inputBuffer: Buffer) {
-    return await pRetry(
-      () => {
-        return this.#processImageQueue.add(async () => {
-          const buffer = await sharp(inputBuffer).jpeg({}).toBuffer();
-
-          return {
-            buffer,
-            mimetype: 'image/jpeg',
-            extension: '.jpg',
-          };
-        });
-      },
-      {
-        retries: 10,
-        randomize: true,
-        onFailedAttempt(error) {
-          console.debug(error);
-        },
-      },
-    );
-  }
-
-  private async processImageFromBase64(base64: string) {
-    const { buffer } = base64ToBuffer(base64);
-    return this.processImageFromBuffer(buffer);
-  }
+  private readonly bucketName = 'arquivos';
+  private readonly uploadQueue = new PQueue({ concurrency: 1 });
 
   constructor(
     @Inject(MinioClient)
-    private minioClient: MinioClient,
-  ) {}
-
-  get bucketName() {
-    return process.env.MINIO_BUCKET_NAME;
+    private readonly minioClient: MinioClient,
+  ) {
+    this.setupBucket();
   }
 
-  private uploadFromBuffer(
-    actorId: string | null,
+  private async setupBucket() {
+    const exists = await this.minioClient.bucketExists(this.bucketName);
+    if (!exists) {
+      await this.minioClient.makeBucket(this.bucketName);
+    }
+  }
+
+  private async uploadFromBuffer(
+    actorId: string | null | undefined,
     objectName: string,
     buffer: Buffer,
     metadata: ItemBucketMetadata,
   ) {
-    const MAX_RETRIES = 3;
-
-    return pRetry(
-      (tentativa) => {
-        return this.#submitImageQueue.add(() => {
-          if (tentativa > 1) {
-            console.log(
-              `tentando enviar arquivo... [${tentativa - 1}/${MAX_RETRIES}]`,
-            );
-          }
-
-          return this.minioClient.putObject(
-            this.bucketName,
-            objectName,
-            buffer,
-            null,
-            {
-              ...metadata,
-              'file-name': metadata['file-name']
-                ? encodeURIComponent(metadata['file-name'])
-                : 'untitled',
-              'actor-id': actorId ?? '',
-              date: new Date().toISOString(),
-            },
-          );
-        });
-      },
-      {
-        retries: MAX_RETRIES,
-        onFailedAttempt(error) {
-          console.debug(error);
-          console.trace('erro ao enviar arquivo');
-        },
-      },
-    );
-  }
-
-  private uploadFromBase64(
-    actorId: string | null,
-    objectName: string,
-    base64: string,
-    metadata: ItemBucketMetadata,
-  ) {
-    const { buffer } = base64ToBuffer(base64);
-
-    return this.uploadFromBuffer(actorId, objectName, buffer, {
-      ...metadata,
-    });
-  }
-
-  private async uploadPictureFromBase64<
-    T extends Omit<
-      IObjectMetadata,
-      'file-name' | 'mime-type' | 'actor-id' | 'date'
-    >,
-  >(
-    acessoControl: AcessoControl | null,
-    objectName: string,
-    base64: string,
-    baseName: string,
-    metadata: T,
-  ) {
-    const img = await this.processImageFromBase64(base64);
-
-    await this.uploadFromBuffer(
-      acessoControl?.currentFuncionario?.id,
+    const object = await this.minioClient.putObject(
+      this.bucketName,
       objectName,
-      img.buffer,
-      {
-        ...metadata,
-        'mime-type': img.mimetype,
-        'file-name': `${baseName}${img.extension}`,
-      },
+      buffer,
+      buffer.length,
+      metadata,
     );
 
-    return objectName;
-  }
-
-  /**
-   * Faz upload de foto de perfil de uma pessoa
-   */
-  async uploadProfilePictureFromBase64(
-    acessoControl: AcessoControl | null,
-    idPessoa: string,
-    base64: string,
-  ) {
-    const objectName = buildObjectNamePessoa(idPessoa);
-
-    await this.uploadPictureFromBase64(
-      acessoControl,
+    return {
       objectName,
-      base64,
-      `pessoa-${idPessoa}-foto-perfil`,
-      {
-        kind: FileKind.PESSOA_FOTO_PERFIL,
-        'pessoa-id': idPessoa,
-      },
-    );
-
-    return objectName;
+      etag: object.etag,
+    };
   }
 
-  /**
-   * Faz upload de documento genérico vinculado a uma entidade
-   */
-  async uploadDocumentoFromBase64(
-    acessoControl: AcessoControl | null,
-    entidadeTipo: string,
-    entidadeId: string,
-    documentoId: string,
-    base64: string,
-    arquivoMeta: ArquivoServiceMetadataInput,
+  private async saveFileFromBase64(
+    actorId: string | null | undefined,
+    input: SaveFileFromBase64Input,
   ) {
-    const objectName = buildObjectNameGenericoDocumento(
-      entidadeTipo,
-      entidadeId,
-      documentoId,
-    );
+    const { kind, file, meta } = input;
 
-    await this.uploadFromBase64(
-      acessoControl?.currentFuncionario?.id,
-      objectName,
-      base64,
-      {
-        kind: FileKind.GENERICO_DOCUMENTO,
-        'entidade-tipo': entidadeTipo,
-        'entidade-id': entidadeId,
-        'documento-id': documentoId,
-        'mime-type': arquivoMeta.tipoArquivo,
-        'file-name': arquivoMeta.nomeArquivo,
-      },
-    );
+    const objectName = `${kind}/${v4()}`;
 
-    return objectName;
-  }
+    const { buffer } = base64ToBuffer(file.byteString);
 
-  /**
-   * Faz upload de arquivo genérico (qualquer tipo)
-   */
-  async uploadArquivoGenerico(
-    acessoControl: AcessoControl | null,
-    objectName: string,
-    buffer: Buffer,
-    metadata: ItemBucketMetadata,
-  ) {
+    const metadata: ItemBucketMetadata = {
+      ...meta,
+      'mime-type': file.tipoArquivo,
+      'file-name': file.nomeArquivo,
+      date: new Date().toISOString(),
+      'actor-id': actorId ?? null,
+      kind,
+    };
+
     return this.uploadFromBuffer(
-      acessoControl?.currentFuncionario?.id,
+      actorId,
       objectName,
       buffer,
       metadata,
+    );
+  }
+
+  async savePessoaFotoPerfil(
+    actorId: string | null | undefined,
+    pessoaId: string,
+    file: ArquivoServiceMetadataInput,
+  ) {
+    const objectName = `${FileKind.PESSOA_FOTO_PERFIL}/${pessoaId}`;
+
+    const { buffer } = base64ToBuffer(file.byteString);
+
+    // Redimensiona a imagem para otimizar
+    const resizedBuffer = await sharp(buffer)
+      .resize(400, 400, {
+        fit: 'cover',
+        position: 'center',
+      })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+
+    const metadata: ItemBucketMetadata = {
+      'mime-type': 'image/jpeg',
+      'file-name': file.nomeArquivo,
+      date: new Date().toISOString(),
+      'actor-id': actorId ?? null,
+      kind: FileKind.PESSOA_FOTO_PERFIL,
+      'pessoa-id': pessoaId,
+    };
+
+    return this.uploadQueue.add(() =>
+      this.uploadFromBuffer(
+        actorId,
+        objectName,
+        resizedBuffer,
+        metadata,
+      ),
+    );
+  }
+
+  async saveGenericoDocumento(
+    actorId: string | null | undefined,
+    entidadeTipo: string,
+    entidadeId: string,
+    file: ArquivoServiceMetadataInput,
+  ) {
+    const objectName = `${FileKind.GENERICO_DOCUMENTO}/${entidadeTipo}/${entidadeId}/${v4()}`;
+
+    const { buffer } = base64ToBuffer(file.byteString);
+
+    const metadata: ItemBucketMetadata = {
+      'mime-type': file.tipoArquivo,
+      'file-name': file.nomeArquivo,
+      date: new Date().toISOString(),
+      'actor-id': actorId ?? null,
+      kind: FileKind.GENERICO_DOCUMENTO,
+      'entidade-tipo': entidadeTipo,
+      'entidade-id': entidadeId,
+    };
+
+    return this.uploadQueue.add(() =>
+      this.uploadFromBuffer(
+        actorId,
+        objectName,
+        buffer,
+        metadata,
+      ),
     );
   }
 
@@ -317,44 +222,12 @@ export class ArquivoService {
   }
 
   async getUploadedFileByAccessToken(
-    acessoControl: AcessoControl | null,
     objectName: string,
   ) {
     const file = await this.getFileObject(objectName);
 
     if (!file) {
       return null;
-    }
-
-    if (acessoControl) {
-      switch (file.meta.kind) {
-        case FileKind.PESSOA_FOTO_PERFIL: {
-          // Verifica se o usuário tem permissão para ver a foto da pessoa
-          await acessoControl.ensureCanReachTarget(
-            'pessoa:read',
-            null,
-            file.meta['pessoa-id'],
-          );
-          break;
-        }
-
-        case FileKind.GENERICO_DOCUMENTO: {
-          // Verifica permissão baseada no tipo de entidade
-          const entidadeTipo = file.meta['entidade-tipo'];
-          await acessoControl.ensureCanReachTarget(
-            `${entidadeTipo}:read`,
-            null,
-            file.meta['entidade-id'],
-          );
-          break;
-        }
-
-        default: {
-          throw new NotImplementedException(
-            `Validação de acesso não implementada para recurso "${file.meta.kind}".`,
-          );
-        }
-      }
     }
 
     const stream = await file.getStream();
@@ -369,22 +242,31 @@ export class ArquivoService {
     };
 
     return {
-      stream,
       headers,
+      stream,
     };
   }
 
+  async deleteFile(objectName: string) {
+    await this.minioClient.removeObject(this.bucketName, objectName);
+  }
+
   /**
-   * Gera URL pré-assinada para acesso temporário ao arquivo
+   * @deprecated Use savePessoaFotoPerfil instead
    */
-  async getPresignedUrl(
-    objectName: string,
-    expirySeconds: number = 3600,
-  ): Promise<string> {
-    return this.minioClient.presignedGetObject(
-      this.bucketName,
-      objectName,
-      expirySeconds,
-    );
+  async uploadProfilePictureFromBase64(
+    actorId: string | null | undefined,
+    pessoaId: string,
+    base64String: string,
+  ) {
+    const file = {
+      nomeArquivo: `foto-${pessoaId}.jpg`,
+      tipoArquivo: 'image/jpeg',
+      nameSizeFile: 'foto-perfil',
+      byteString: base64String,
+    };
+    
+    const result = await this.savePessoaFotoPerfil(actorId, pessoaId, file);
+    return result.objectName;
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { locusService } from '@/services';
+import { enderecoService } from '@/services';
 import { Box, CircularProgress, MenuItem, Stack } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { mask } from '@softlutions/utils';
@@ -65,10 +65,10 @@ export function FormEndereco({
   const skipFirstFillRef = useRef(skipFirstFill);
 
   useEffect(() => {
-    locusService
+    enderecoService
       .findAllEstado()
       .then((response) => {
-        setListaEstados(response);
+        setListaEstados(response.data?.data || response.data || []);
       })
       .catch(() => {
         enqueueSnackbar('Serviço de estados indisponível', {
@@ -79,10 +79,10 @@ export function FormEndereco({
 
   useEffect(() => {
     if (values?.[names?.estado]) {
-      locusService
+      enderecoService
         .findAllCidadeByIdEstado(values?.[names?.estado])
         .then((response) => {
-          setListaCidades(response);
+          setListaCidades(response.data?.data || response.data || []);
         })
         .catch(() => {
           enqueueSnackbar('Serviço de cidade indisponível', {
@@ -103,16 +103,17 @@ export function FormEndereco({
       if (mask.unmasked(values?.[names?.cep]).length == 8 && !loader) {
         setLoadingCep(true);
         setTimeout(() => {
-          locusService
+          enderecoService
             .findOneEnderecoByCep(mask.unmasked(values?.[names?.cep]))
             .then((response) => {
+              const data = response.data?.data || response.data;
               setErrorCep(false);
-              setValue(names?.estado, response.city.estado, { shouldValidate: true });
-              setValue(names?.cidade, response.city.id, { shouldValidate: true });
-              setValue(names?.logradouro, response.street, { shouldValidate: true });
-              setValue(names?.bairro, response.neighborhood, { shouldValidate: true });
+              setValue(names?.estado, data?.cidade?.estado?.id, { shouldValidate: true });
+              setValue(names?.cidade, data?.cidade?.id, { shouldValidate: true });
+              setValue(names?.logradouro, data?.logradouro, { shouldValidate: true });
+              setValue(names?.bairro, data?.bairro, { shouldValidate: true });
 
-              if (names?.cidadeNome) setValue(names?.cidadeNome, response.city.nome);
+              if (names?.cidadeNome) setValue(names?.cidadeNome, data?.cidade?.nome);
             })
             .catch(() => {
               enqueueSnackbar('CEP não encontrado', {

@@ -9,7 +9,7 @@ import {
 import { EnderecoEntity } from './endereco.entity';
 import { EstadoEntity } from './estado.entity';
 
-@Entity('cidade')
+@Entity('base_cidade')
 export class CidadeEntity {
   @PrimaryGeneratedColumn()
   id!: number;

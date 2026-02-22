@@ -2,7 +2,7 @@
 
 import { ActionMapType, AuthStateType, AuthUserType } from '@/models';
 import { pages, useRouter } from '@/routes';
-import { LoginService, unidadeService, userService } from '@/services';
+import { LoginService, userService } from '@/services';
 
 import { getLocalItem, getSessionItem, setLocalItem } from '@softlutions/utils';
 import jwtDecode from 'jwt-decode';
@@ -110,8 +110,6 @@ export function AuthProvider({ children }: Props) {
 
         setRole(clean(user?.profile?.descricao));
 
-        await unidadeService.loadCurrentUnidade().catch((error) => console.error('❌ Erro ao carregar unidade na inicialização:', error));
-
         dispatch({
           type: Types.INITIAL,
           payload: {
@@ -155,20 +153,18 @@ export function AuthProvider({ children }: Props) {
 
     setRole(clean(user?.profile?.descricao));
 
-    await unidadeService.loadCurrentUnidade()
-      .catch((error) => console.error('❌ Erro ao carregar unidade no login:', error));
-
-    if (user?.updatePassword == true) router.push(pages.auth.forgotPassword.path);
     dispatch({
       type: Types.LOGIN,
       payload: {
         user,
       },
     });
-  }, []);
+  }, [setRole]);
 
-  // REGISTER
-  const register = useCallback(async () => { }, []);
+  // REGISTER (não implementado)
+  const register = useCallback(async () => {
+    throw new Error('Register not implemented');
+  }, []);
 
   // LOGOUT
   const logout = useCallback(async () => {
@@ -176,27 +172,22 @@ export function AuthProvider({ children }: Props) {
     dispatch({
       type: Types.LOGOUT,
     });
-  }, []);
+    router.push(pages.auth.login.path);
+  }, [router]);
 
-  // ----------------------------------------------------------------------
-
-  const checkAuthenticated = state.user ? 'authenticated' : 'unauthenticated';
-
-  const status = state.loading ? 'loading' : checkAuthenticated;
-
-  const memoizedValue = useMemo(
+  const value = useMemo(
     () => ({
       user: state.user,
       method: 'jwt',
-      loading: status === 'loading',
-      authenticated: status === 'authenticated',
-      unauthenticated: status === 'unauthenticated',
+      loading: state.loading,
+      authenticated: !!state.user,
+      unauthenticated: !state.user,
       login,
       register,
       logout,
     }),
-    [login, logout, register, state.user, status],
+    [login, logout, register, state.user, state.loading]
   );
 
-  return <AuthContext.Provider value={memoizedValue}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

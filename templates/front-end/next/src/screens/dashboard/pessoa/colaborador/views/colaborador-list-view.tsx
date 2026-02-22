@@ -12,7 +12,7 @@ import {
   TablePagination,
   useTableApi,
 } from '@/components';
-import { IColaborador } from '@/models';
+import { IColaborador, IColaboradorList } from '@/models';
 import { pages } from '@/routes';
 import {
   Button,
@@ -40,7 +40,7 @@ import { COLABORADOR_ENUMS } from '../enums';
 export function ColaboradorListView() {
   const handleError = useError();
 
-  const { methods } = useTableApi<IColaborador>({ modulo: 'colaborador' });
+  const { methods } = useTableApi<IColaboradorList>({ modulo: 'colaborador' });
 
   const { setValue, watch } = methods;
 
@@ -63,9 +63,14 @@ export function ColaboradorListView() {
     setOpenModal(true);
   };
 
-  const handleEdit = (item: IColaborador) => {
-    setCurrentItem(item);
-    setOpenModal(true);
+  const handleEdit = (item: IColaboradorList) => {
+    // Buscar detalhes completos do colaborador
+    ColaboradorService.show(item.id)
+      .then((colaborador) => {
+        setCurrentItem(colaborador);
+        setOpenModal(true);
+      })
+      .catch((error) => handleError(error, 'Erro ao carregar colaborador'));
   };
 
   const handleCloseModal = () => {
@@ -73,9 +78,14 @@ export function ColaboradorListView() {
     setCurrentItem(null);
   };
 
-  const handleResetPassword = (item: IColaborador) => {
-    setResetPasswordItem(item);
-    setOpenResetPasswordModal(true);
+  const handleResetPassword = (item: IColaboradorList) => {
+    // Buscar detalhes completos do colaborador
+    ColaboradorService.show(item.id)
+      .then((colaborador) => {
+        setResetPasswordItem(colaborador);
+        setOpenResetPasswordModal(true);
+      })
+      .catch((error) => handleError(error, 'Erro ao carregar colaborador'));
   };
 
   const handleCloseResetPasswordModal = () => {
@@ -143,17 +153,15 @@ export function ColaboradorListView() {
                 <TableBody>
                   {dataTable?.map((item) => (
                     <TableRow hover key={item.id}>
-                      <TableCell>{item.id}</TableCell>
+                      <TableCell>{item.nome || '-'}</TableCell>
 
-                      <TableCell>{item.nome}</TableCell>
+                      <TableCell>{item.username || '-'}</TableCell>
 
-                      <TableCell>{item.username}</TableCell>
-
-                      <TableCell>{item.perfil}</TableCell>
+                      <TableCell>{item.nivelAcesso || '-'}</TableCell>
 
                       <TableCell>
-                        <Label color={item.bloqueado ? 'error' : 'success'}>
-                          {item.bloqueado ? 'Sim' : 'Não'}
+                        <Label color={item.ativo ? 'success' : 'error'}>
+                          {item.ativo ? 'Ativo' : 'Inativo'}
                         </Label>
                       </TableCell>
 

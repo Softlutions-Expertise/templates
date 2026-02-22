@@ -8,7 +8,7 @@ import {
 import { UsuarioEntity } from '../../pessoa/entities/usuario.entity';
 import { Motivo, Servico } from './enums/log-coordenada.enum';
 
-@Entity('log_coordenada')
+@Entity('base_log_coordenada')
 export class LogCoordenadaEntity {
   @PrimaryGeneratedColumn()
   id: number;

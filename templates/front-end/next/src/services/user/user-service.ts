@@ -1,28 +1,16 @@
 'use client';
 
-import axios from 'axios';
-
-import { api } from '@/services';
-import { getLocalItem } from '@softlutions/utils';
+import { api } from '@/services/config-service';
 
 // ----------------------------------------------------------------------
 
 async function show(): Promise<any> {
-  const response = await api.auth.get('/people/auth/business/userinfo', {
-    headers: {
-      'x-api-key': process.env.NEXT_PUBLIC_API_KEY,
-    },
-  });
-
+  const response = await api.offauth.get('/auth/me');
   return response.data;
 }
 
 async function update(values: Record<string, any>): Promise<any> {
-  const response = await axios.put(
-    `https://central.lasercinemas.com.br/admin/realms/cinelaser/users/${getLocalItem('user')?.sub}`,
-    { attributes: values },
-  );
-
+  const response = await api.offauth.put('/auth/me', values);
   return response.data;
 }
 

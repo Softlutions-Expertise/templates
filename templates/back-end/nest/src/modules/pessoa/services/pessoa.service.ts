@@ -57,7 +57,7 @@ export class PessoaService {
 
     if (data.foto) {
       const filePath = await this.arquivoService.uploadProfilePictureFromBase64(
-        acessoControl,
+        acessoControl?.currentColaborador?.id,
         data.id,
         data.foto,
       );
@@ -86,7 +86,7 @@ export class PessoaService {
     if (data.foto) {
       const accessToken =
         await this.arquivoService.uploadProfilePictureFromBase64(
-          acessoControl,
+          acessoControl?.currentColaborador?.id,
           id,
           data.foto,
         );

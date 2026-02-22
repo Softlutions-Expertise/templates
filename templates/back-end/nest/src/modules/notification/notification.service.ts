@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { AcessoControl } from '../../infrastructure/acesso-control';
 
 interface NotificationQueryParams {
   lastDateViewed?: string;
@@ -19,13 +18,9 @@ interface NotificationResponse {
 @Injectable()
 export class NotificationService {
   async getNotifications(
-    acessoControl: AcessoControl,
     query: NotificationQueryParams,
   ): Promise<NotificationResponse> {
     const { lastDateViewed } = query;
-
-    // Verifica permissão
-    await acessoControl.ensureCanPerform('notification:read', {});
 
     // Template - implementar lógica específica
     const notifications = [];

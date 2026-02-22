@@ -15,7 +15,7 @@ export class UsuarioEntity {
   @Column('enum', { enum: NivelAcesso })
   nivelAcesso: NivelAcesso;
 
-  @Column({ default: true })
+  @Column({ name: 'ativo', default: true })
   situacaoCadastral: boolean;
 
   @Column()

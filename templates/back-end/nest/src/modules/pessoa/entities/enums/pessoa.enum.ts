@@ -55,29 +55,29 @@ export enum ResponsavelLegal {
 }
 
 export enum NivelEscolaridade {
-  EnsinoFundamentalIncompleto = 'Ensino fundamental incompleto',
-  EnsinoFundamentalCompleto = 'Ensino fundamental completo',
-  EnsinoMedioIncompleto = 'Ensino médio incompleto',
-  EnsinoMedioCompleto = 'Ensino médio completo',
-  SuperiorIncompleto = 'Superior incompleto',
-  SuperiorCompleto = 'Ensino superior completo',
-  PosGraduacao = 'Pós-graduação',
+  EnsinoFundamentalIncompleto = 'EnsinoFundamentalIncompleto',
+  EnsinoFundamentalCompleto = 'EnsinoFundamentalCompleto',
+  EnsinoMedioIncompleto = 'EnsinoMedioIncompleto',
+  EnsinoMedioCompleto = 'EnsinoMedioCompleto',
+  SuperiorIncompleto = 'SuperiorIncompleto',
+  SuperiorCompleto = 'SuperiorCompleto',
+  PosGraduacao = 'PosGraduacao',
   Mestrado = 'Mestrado',
   Doutorado = 'Doutorado',
 }
 
 export enum TipoEnsinoMedio {
-  FormacaoGeral = 'Formação geral',
-  ModalidadeNormal = 'Modalidade normal (magistério)',
-  CursoTecnico = 'Curso técnico',
-  MagisterioIndigena = 'Magistério indígena - modalidade normal',
+  FormacaoGeral = 'FormacaoGeral',
+  ModalidadeNormal = 'ModalidadeNormal',
+  CursoTecnico = 'CursoTecnico',
+  MagisterioIndigena = 'MagisterioIndigena',
 }
 
 export enum PosGraduacaoConcluida {
-  Especializacao = 'Especialização',
+  Especializacao = 'Especializacao',
   Mestrado = 'Mestrado',
   Doutorado = 'Doutorado',
-  NaoTemPos = 'Não tem pós-graduação concluída',
+  NaoTemPos = 'NaoTemPos',
 }
 export enum OutrosCursosExpecificos {
   Creche = 'Creche (0 a 3 anos)',
@@ -115,12 +115,12 @@ export enum TipoInstituicao {
   Privada = 'Privada',
 }
 export enum TipoVinculoInstituicao {
-  UnidadeEscolar = 'Unidade Escolar',
-  SecretariaMunicipal = 'Secretaria Municipal',
+  Interno = 'Interno',
+  Externo = 'Externo',
 }
 
 export enum Cargo {
-  AdministradorSistema = 'Administrador Sistema',
+  AdministradorSistema = 'AdministradorSistema',
   Gestor = 'Gestor',
   Analista = 'Analista',
   Operador = 'Operador',
@@ -128,9 +128,8 @@ export enum Cargo {
 }
 
 export enum NivelAcesso {
-  Defensoria = 'Defensoria',
   Administrador = 'Administrador',
-  AdministradorMunicipal = 'Administrador Municipal',
-  AtendenteSecretaria = 'Atendente Secretaria',
-  GestorCreche = 'Gestor de Creche',
+  Gestor = 'Gestor',
+  Analista = 'Analista',
+  Operador = 'Operador',
 }

@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { paginate, Paginated, PaginateQuery } from 'nestjs-paginate';
 import { randomBytes } from 'node:crypto';
 import { v4 } from 'uuid';
@@ -8,7 +9,6 @@ import {
   FULL_COMPARE_NUMERIC,
 } from '../../../helpers/paginate-utils';
 import { AcessoControl } from '../../../infrastructure/acesso-control';
-import { DatabaseContextService } from '../../../infrastructure/database-context/database-context.service';
 import { CreateIntegrationAccessTokenDto } from './dto/create-integration-access-token.dto';
 import { UpdateIntegrationAccessTokenDto } from './dto/update-integration-access-token.dto';
 import { IntegrationAccessTokenEntity } from './entities/integration-access-token.entity';
@@ -30,10 +30,13 @@ export const isCDVAccessTokenV1 = (accessToken: unknown) => {
 
 @Injectable()
 export class IntegrationAccessTokenService {
-  constructor(private databaseContextService: DatabaseContextService) {}
+  constructor(
+    @Inject('DATA_SOURCE')
+    private dataSource: DataSource,
+  ) {}
 
   get repository() {
-    return this.databaseContextService.integrationAccessToken;
+    return this.dataSource.getRepository(IntegrationAccessTokenEntity);
   }
 
   async findOneByToken(acessoControl: AcessoControl | null, token: string) {
@@ -82,7 +85,7 @@ export class IntegrationAccessTokenService {
   ) {
     const token = await this.generateNewV1Token();
 
-    const data: Partial<IntegrationAccessTokenEntity> = {
+    const data = {
       ...dto,
       token,
       colaboradorAutor: { id: acessoControl.currentColaborador.id },
@@ -99,34 +102,70 @@ export class IntegrationAccessTokenService {
   async update(
     acessoControl: AcessoControl,
     id: string,
-    data: UpdateIntegrationAccessTokenDto,
+    dto: UpdateIntegrationAccessTokenDto,
   ) {
-    const { ...currentEntity } = await this.findOne(acessoControl, id);
-
     await acessoControl.ensureCanReachTarget(
       'integration_access_token:update',
       this.repository.createQueryBuilder('integration_access_token'),
       id,
-      data,
     );
 
-    const preloadedEntity = await this.repository.preload({
-      ...currentEntity,
-      ...data,
-      colaboradorAutor: currentEntity.colaboradorAutor,
+    const entity = await this.repository.preload({
       id,
+      ...dto,
     });
 
-    const integrationAccessToken = await this.repository.save(preloadedEntity);
+    if (!entity) {
+      throw new NotFoundException();
+    }
 
-    return integrationAccessToken;
+    return this.repository.save(entity);
   }
 
-  async findOne(
-    acessoControl: AcessoControl | null,
-    id: string,
-  ): Promise<IntegrationAccessTokenEntity> {
-    const entity = await this.repository.findOne({
+  async remove(acessoControl: AcessoControl, id: string) {
+    await acessoControl.ensureCanReachTarget(
+      'integration_access_token:delete',
+      this.repository.createQueryBuilder('integration_access_token'),
+      id,
+    );
+
+    await this.repository.softDelete(id);
+  }
+
+  async findAll(
+    query: PaginateQuery,
+  ): Promise<Paginated<IntegrationAccessTokenEntity>> {
+    return paginate(query, this.repository, {
+      ...paginateConfig,
+      sortableColumns: [
+        'id',
+        'token',
+        'descricao',
+        'ativo',
+        'validoAte',
+        'createdAt',
+        'updatedAt',
+      ],
+      searchableColumns: ['token', 'descricao'],
+      filterableColumns: {
+        ativo: [FULL_COMPARE_ENUMERABLE],
+        token: [FULL_COMPARE_NUMERIC],
+        createdAt: true,
+        updatedAt: true,
+      },
+      defaultSortBy: [['createdAt', 'DESC']],
+      relations: ['colaboradorAutor.pessoa'],
+    });
+  }
+
+  async findOne(acessoControl: AcessoControl, id: string) {
+    await acessoControl.ensureCanReachTarget(
+      'integration_access_token:read',
+      this.repository.createQueryBuilder('integration_access_token'),
+      id,
+    );
+
+    return this.repository.findOne({
       where: { id },
       relations: {
         colaboradorAutor: {
@@ -137,76 +176,5 @@ export class IntegrationAccessTokenService {
         },
       },
     });
-
-    if (!entity) {
-      throw new NotFoundException(`integration access token não encontrada`);
-    }
-
-    if (acessoControl) {
-      await acessoControl.ensureCanReachTarget(
-        'integration_access_token:read',
-        this.repository.createQueryBuilder('integration_access_token'),
-        id,
-      );
-    }
-
-    return entity;
-  }
-
-  async findAll(
-    acessoControl: AcessoControl | null,
-    query: PaginateQuery,
-  ): Promise<Paginated<IntegrationAccessTokenEntity>> {
-    const qb = this.repository.createQueryBuilder('integration_access_token');
-
-    if (acessoControl) {
-      await acessoControl.applyConditionFilterToQueryBuilderByStatementAction(
-        'integration_access_token:read',
-        qb,
-      );
-    }
-
-    return paginate(query, qb, {
-      ...paginateConfig,
-      sortableColumns: [
-        'descricao',
-        'validoAte',
-        'createdAt',
-        'updatedAt',
-        'colaboradorAutor.pessoa.nome',
-        'herdaPermissoesDeColaborador.pessoa.nome',
-      ],
-      relations: {
-        colaboradorAutor: {
-          pessoa: true,
-        },
-        herdaPermissoesDeColaborador: {
-          pessoa: true,
-        },
-      },
-      defaultSortBy: [['createdAt', 'DESC']],
-      searchableColumns: ['descricao'],
-      filterableColumns: {
-        id: FULL_COMPARE_ENUMERABLE,
-        'colaboradorAutor.id': FULL_COMPARE_ENUMERABLE,
-        'herdaPermissoesDeColaborador.id': FULL_COMPARE_ENUMERABLE,
-        validoAte: FULL_COMPARE_NUMERIC,
-        createdAt: FULL_COMPARE_NUMERIC,
-      },
-    });
-  }
-
-  async remove(acessoControl: AcessoControl | null, id: string) {
-    const entity = await this.findOne(acessoControl, id);
-
-    if (acessoControl) {
-      await acessoControl.ensureCanReachTarget(
-        'integration_access_token:delete',
-        this.repository.createQueryBuilder('integration_access_token'),
-        id,
-      );
-    }
-
-    await this.repository.remove(entity);
   }
 }

@@ -1,15 +1,21 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DatabaseModule } from '../database/database.module';
-import { WorkerController } from './worker.controller';
-import { WorkerService } from './worker.service';
 
+/**
+ * Worker Module - Template para processamento em background
+ * 
+ * Adicione controllers e services conforme necessário para:
+ * - Jobs agendados
+ * - Processamento de filas
+ * - Tarefas assíncronas
+ */
 @Module({
   imports: [
     DatabaseModule,
     ScheduleModule.forRoot(),
   ],
-  controllers: [WorkerController],
-  providers: [WorkerService],
+  controllers: [],
+  providers: [],
 })
 export class WorkerModule {}

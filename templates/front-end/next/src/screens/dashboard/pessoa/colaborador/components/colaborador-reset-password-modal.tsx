@@ -79,11 +79,11 @@ export function ColaboradorResetPasswordModal({
   };
 
   const onSubmit = handleSubmit(async (data) => {
-    if (!currentItem?.username || !data.password) return;
+    if (!currentItem?.usuario?.usuario || !data.password) return;
 
     try {
       await ColaboradorService.changePassword({
-        username: currentItem.username,
+        username: currentItem.usuario.usuario,
         password: data.password,
       });
       enqueueSnackbar('Senha redefinida com sucesso!');
@@ -99,7 +99,7 @@ export function ColaboradorResetPasswordModal({
       <DialogTitle>
         <Typography variant="h6">Redefinir Senha</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          Usuário: <strong>{currentItem?.username}</strong>
+          Usuário: <strong>{currentItem?.usuario?.usuario}</strong>
         </Typography>
       </DialogTitle>
 

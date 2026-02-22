@@ -1,6 +1,6 @@
 'use client';
 
-import { locusService } from '@/services';
+import { enderecoService } from '@/services';
 import { MenuItem, Stack } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
@@ -37,10 +37,10 @@ export function FormUfCidade({
   const values = watch();
 
   useEffect(() => {
-    locusService
+    enderecoService
       .findAllEstado()
       .then((response) => {
-        setListaEstados(response);
+        setListaEstados(response.data?.data || response.data || []);
       })
       .catch(() => {
         enqueueSnackbar('Serviço de estados indisponível', {
@@ -51,10 +51,10 @@ export function FormUfCidade({
 
   useEffect(() => {
     if (values?.[names.estado]) {
-      locusService
+      enderecoService
         .findAllCidadeByIdEstado(values?.[names.estado])
         .then((response) => {
-          setListaCidades(response);
+          setListaCidades(response.data?.data || response.data || []);
         })
         .catch(() => {
           enqueueSnackbar('Serviço de cidade indisponível', {

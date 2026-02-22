@@ -13,7 +13,7 @@
 import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { useContainer } from 'class-validator';
-import * as bcrypt from 'bcrypt';
+import { createHash } from 'crypto';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { DatabaseModule } from '../database/database.module';
@@ -87,7 +87,7 @@ async function criarAdmin(repositories: SeedRepositories) {
     complemento: '',
     pontoReferencia: '',
     cep: '',
-    localizacaoDiferenciada: 'Não' as any,
+    localizacaoDiferenciada: 'Nao' as any,
     zona: 'Urbana' as any,
     latitude: '',
     longitude: '',
@@ -112,8 +112,8 @@ async function criarAdmin(repositories: SeedRepositories) {
     enderecos: [endereco],
   });
 
-  // Criar usuario
-  const hashedPassword = await bcrypt.hash(adminSenha, 10);
+  // Criar usuario (usando SHA256 como fallback - em produção use bcrypt)
+  const hashedPassword = createHash('sha256').update(adminSenha).digest('hex');
   const usuario = await repositories.usuario.save({
     id: uuidv4(),
     usuario: adminUsuario,

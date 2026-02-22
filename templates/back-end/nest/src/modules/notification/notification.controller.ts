@@ -27,9 +27,6 @@ export class NotificationController {
     @ResolveAcessoControl() acessoControl: AcessoControl,
     @Query() query: any,
   ): Promise<any> {
-    return await this.notificationService.getNotifications(
-      acessoControl,
-      query,
-    );
+    return await this.notificationService.getNotifications(query);
   }
 }

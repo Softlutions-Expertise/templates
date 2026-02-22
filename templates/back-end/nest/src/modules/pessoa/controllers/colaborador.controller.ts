@@ -26,7 +26,7 @@ import { ColaboradorEntity } from '../entities/colaborador.entity';
 import { ColaboradorService } from '../services/colaborador.service';
 
 @ApiTags('Colaborador')
-@Controller('/pessoa/colaborador')
+@Controller('/pessoas/colaboradores')
 export class ColaboradorController {
   constructor(private readonly service: ColaboradorService) {}
 

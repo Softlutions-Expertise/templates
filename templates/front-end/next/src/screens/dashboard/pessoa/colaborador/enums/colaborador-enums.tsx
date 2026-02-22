@@ -1,11 +1,10 @@
 // ----------------------------------------------------------------------
 
 const TABLE_HEADER = [
-  { id: 'id', label: 'ID', width: 80 },
-  { id: 'nome', label: 'Nome', width: 200 },
+  { id: 'nome', label: 'Nome', width: 250 },
   { id: 'username', label: 'Usuário', width: 150 },
-  { id: 'perfil', label: 'Perfil', width: 150 },
-  { id: 'bloqueado', label: 'Bloqueado', width: 120 },
+  { id: 'nivelAcesso', label: 'Nível de Acesso', width: 150 },
+  { id: 'ativo', label: 'Status', width: 120 },
   { id: 'acoes', label: 'Ações', width: 100 },
 ];
 

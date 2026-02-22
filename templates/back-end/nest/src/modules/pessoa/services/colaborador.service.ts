@@ -79,10 +79,6 @@ export class ColaboradorService {
       throw new NotFoundException(`Colaborador não encontrado.`);
     }
 
-    if (acessoControl) {
-      await acessoControl.ensureCanReachTarget('colaborador:read', null, id);
-    }
-
     return entity;
   }
 
@@ -91,12 +87,9 @@ export class ColaboradorService {
     query: PaginateQuery,
     instituicaoId?: string,
   ): Promise<Paginated<ColaboradorEntity>> {
-    const qb = this.colaboradorRepository.createQueryBuilder('colaborador');
-
-    await acessoControl.applyConditionFilterToQueryBuilderByStatementAction(
-      'colaborador:read',
-      qb,
-    );
+    const qb = this.colaboradorRepository.createQueryBuilder('colaborador')
+      .leftJoinAndSelect('colaborador.pessoa', 'pessoa')
+      .leftJoinAndSelect('colaborador.usuario', 'usuario');
 
     if (instituicaoId) {
       qb.andWhere('colaborador.instituicaoId = :instituicaoId', {
@@ -134,12 +127,8 @@ export class ColaboradorService {
     // remover a mascara do cpf
     data.cpf = data.cpf?.replace(/\D/g, '');
 
-    switch (data.nivelAcesso) {
-      case NivelAcesso.Administrador:
-      case NivelAcesso.Defensoria: {
-        data.tipoVinculo = null;
-        break;
-      }
+    if (data.nivelAcesso === NivelAcesso.Administrador) {
+      data.tipoVinculo = null;
     }
 
     await acessoControl.ensureCanPerform('colaborador:create', data);
@@ -166,12 +155,8 @@ export class ColaboradorService {
       data.cpf = LimparCpf(data.cpf);
     }
 
-    switch (data.nivelAcesso) {
-      case NivelAcesso.Administrador:
-      case NivelAcesso.Defensoria: {
-        data.tipoVinculo = null;
-        break;
-      }
+    if (data.nivelAcesso === NivelAcesso.Administrador) {
+      data.tipoVinculo = null;
     }
 
     await acessoControl.ensureCanReachTarget(

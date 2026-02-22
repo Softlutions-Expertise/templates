@@ -10,9 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { CidadeEntity } from './cidade.entity';
-import { DistritoEntity } from './distrito.entity';
-import { LocalizacaoDiferencia, Zona } from './enums/endereco.enum';
-import { SubdistritoEntity } from './subdistrito.entity';
+import { LocalizacaoDiferencia as LocalizacaoDiferenciada, Zona } from './enums/endereco.enum';
 
 @Entity('base_endereco')
 export class EnderecoEntity {
@@ -29,37 +27,29 @@ export class EnderecoEntity {
   @Column()
   bairro: string;
 
-  @Column()
+  @Column({ nullable: true })
   complemento: string;
 
-  @Column()
+  @Column({ nullable: true })
   pontoReferencia: string;
 
   @Column()
   cep: string;
 
-  @Column({ type: 'enum', enum: LocalizacaoDiferencia })
-  localizacaoDiferenciada: LocalizacaoDiferencia;
+  @Column({ type: 'enum', enum: LocalizacaoDiferenciada, nullable: true })
+  localizacaoDiferenciada: LocalizacaoDiferenciada;
 
-  @Column({ type: 'enum', enum: Zona })
+  @Column({ type: 'enum', enum: Zona, nullable: true })
   zona: Zona;
 
-  @ManyToOne(() => CidadeEntity, (cidade) => cidade.enderecos, { eager: true })
+  @ManyToOne(() => CidadeEntity, { eager: true, nullable: true })
   @JoinColumn({ name: 'cidade_id', referencedColumnName: 'id' })
   cidade: CidadeEntity;
 
-  @ManyToOne(() => DistritoEntity, { eager: true })
-  @JoinColumn({ name: 'distrito_id', referencedColumnName: 'id' })
-  distrito: DistritoEntity;
-
-  @ManyToOne(() => SubdistritoEntity, { eager: true })
-  @JoinColumn({ name: 'subdistrito_id', referencedColumnName: 'id' })
-  subdistrito: SubdistritoEntity;
-
-  @Column()
+  @Column({ nullable: true })
   latitude: string;
 
-  @Column()
+  @Column({ nullable: true })
   longitude: string;
 
   @CreateDateColumn()
@@ -69,5 +59,5 @@ export class EnderecoEntity {
   updatedAt!: Date;
 
   @DeleteDateColumn()
-  deletedAt!: Date;
+  deletedAt: Date;
 }

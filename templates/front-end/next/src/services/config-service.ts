@@ -3,91 +3,65 @@
 import axios from 'axios';
 
 // ----------------------------------------------------------------------
+
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-let host = '';
+// URL base da API - usa a variável de ambiente ou fallback para localhost
+// Backend NestJS default: port 3000
+const API_BASE_URL = 
+  process.env.NEXT_PUBLIC_API_URL || 
+  (isDevelopment ? 'http://localhost:3000/api' : '');
 
-if (typeof window !== 'undefined') {
-  const url = new URL(window.location.href);
-  host = url.hostname.toString().substring(0, url.hostname.toString().indexOf('.br') + 3);
-}
-
-export const CENTRAL_API = process.env.NEXT_PUBLIC_CENTRAL_API;
-
-export const LOCAL_API = isDevelopment
-  ? process.env.NEXT_PUBLIC_LOCAL_API
-  : `https://${host || ''}`;
+// URL do serviço de relatórios (mesmo backend para template simplificado)
+const REPORT_SERVICE_URL = 
+  process.env.NEXT_PUBLIC_REPORT_SERVICE_URL || 
+  (isDevelopment ? 'http://localhost:3000/api' : '');
 
 // ----------------------------------------------------------------------
 
 const api = {
-  auth: axios.create({
-    baseURL: `${CENTRAL_API}`,
-  }),
+  // API principal (NestJS)
   offauth: axios.create({
-    baseURL: `${LOCAL_API}/offauth`,
+    baseURL: API_BASE_URL,
+    headers: {
+      'Content-Type': 'application/json',
+    },
   }),
-  cashway: axios.create({
-    baseURL: `${CENTRAL_API}/cashway`,
-  }),
-  banners: axios.create({
-    baseURL: `${CENTRAL_API}/banners`,
-  }),
-  bonbonniere: axios.create({
-    baseURL: `${CENTRAL_API}/bonbonniere`,
-  }),
-  business: axios.create({
-    baseURL: `${CENTRAL_API}/business`,
-  }),
-  local: {
-    fiscal: axios.create({
-      baseURL: `${LOCAL_API}/fiscal`,
-    }),
-    scb: axios.create({
-      baseURL: `${LOCAL_API}/scb`,
-    }),
-    views: axios.create({
-      baseURL: `${LOCAL_API}/views`,
-    }),
-    warehouse: axios.create({
-      baseURL: `${LOCAL_API}/warehouse`,
-    }),
-  },
-  locus: axios.create({
-    baseURL: `${CENTRAL_API}/locus`,
-  }),
-  movies: axios.create({
-    baseURL: `${CENTRAL_API}/movies`,
-  }),
-  people: axios.create({
-    baseURL: `${CENTRAL_API}/people`,
-  }),
-  suppliers: axios.create({
-    baseURL: `${CENTRAL_API}/suppliers`,
-  }),
-  specta: axios.create({
-    baseURL: `${CENTRAL_API}/specta`,
-  }),
-  user: axios.create({
-    baseURL: `${CENTRAL_API}/users`,
-  }),
-  visum: axios.create({
-    baseURL: `${CENTRAL_API}/visum`,
-  }),
-  booking: axios.create({
-    baseURL: `${LOCAL_API}/booking`,
-  }),
-  income: axios.create({
-    baseURL: `${LOCAL_API}/income`,
-  }),
-  cashbox: axios.create({
-    baseURL: `${LOCAL_API}/cashbox`,
-  }),
-  pay: axios.create({
-    baseURL: `${LOCAL_API}/pay`,
+  
+  // Serviço de relatórios
+  report: axios.create({
+    baseURL: REPORT_SERVICE_URL,
+    headers: {
+      'Content-Type': 'application/json',
+    },
   }),
 };
 
+// Interceptor para adicionar token de autenticação
+api.offauth.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
-export { api };
+// Interceptor para tratamento de erros
+api.offauth.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Redirecionar para login em caso de não autorizado
+      localStorage.removeItem('accessToken');
+      window.location.href = '/auth/login/';
+    }
+    return Promise.reject(error);
+  }
+);
 
+export { api, API_BASE_URL, REPORT_SERVICE_URL };

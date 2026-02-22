@@ -1,52 +1,125 @@
-# CINELASER APP INPLACE
+# Template Frontend - Next.js
 
-Sistema de gestão das unidades
+Template frontend em Next.js 13+ com TypeScript, Material UI e integração com backend NestJS.
 
-## ▶️ Começando
+## 🚀 Começando
 
-Essas instruções permitirão que você obtenha uma cópia do projeto em operação na sua máquina local para fins de desenvolvimento ou teste.
+### Pré-requisitos
 
-### 📋 Pré-requisitos
+- Node.js >= 18.0.0
+- npm ou yarn
+- Backend NestJS rodando (porta 3000)
 
-Para rodar o projeto você deve ter no mínimo os seguintes requisitos
+### Instalação
 
-```
-Node: 22.20.0 ou verão mais atual LTS
-npm: 10.9.2 ou verão mais atual LTS
-```
-
-## 📦 Implantação
-
-Para finalizar a implantação, realize este último passoa passo
-
-Node e npm:
-
-- Vá até raiz do projeto e digite os seguintes comando
-
-```
+```bash
+# Instalar dependências
 npm install
+
+# Configurar variáveis de ambiente
+cp .env.local.example .env.local
+# Edite .env.local conforme necessário
+```
+
+### Desenvolvimento
+
+```bash
+# Iniciar servidor de desenvolvimento (porta 3000)
 npm run dev
+
+# Com limpeza de cache
+npm run dev:clean
 ```
 
-Este comando ira installar todas as dependências do Node e iniciar o projeto, a porta padrão é 8084.
+O frontend estará disponível em `http://localhost:3000`
 
-## 🚀 Build
+### Build
 
-Está etapa é feita apenas caso você queira buildar e testar em modo de procução a aplicação
+```bash
+# Build de produção
+npm run build
 
-Npm :
-
-- Crie uma nova pasta e dentro dela coloque os seguintes arquivos do projeto de Implantação
-
-  - package.json \*arquivo
-  - public \*diretório
-  - package-lock.json \*arquivo
-
-- Depois execute este comando
-
-```
-npm ci
-npm build
+# Iniciar em produção
+npm start
 ```
 
-Este comando ira installar todas as dependências do Node e iniciar o projeto em modo de produção
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── app/                    # App Router (Next.js 13+)
+│   ├── auth/              # Páginas de autenticação
+│   ├── dashboard/         # Área logada
+│   │   └── pessoa/        # Módulo de pessoas
+│   │       └── colaborador/  # CRUD de colaboradores
+│   ├── layout.tsx         # Layout principal
+│   └── page.tsx           # Página inicial
+├── components/            # Componentes reutilizáveis
+├── hooks/                 # Custom hooks
+├── models/                # Interfaces TypeScript
+├── services/              # Serviços de API
+├── stores/                # Estado global (Zustand)
+├── theme/                 # Configuração do Material UI
+└── utils/                 # Utilitários
+```
+
+## 🔌 Integração com Backend
+
+O frontend se comunica com o backend NestJS nas seguintes rotas:
+
+| Endpoint | Descrição |
+|----------|-----------|
+| `POST /api/auth/login` | Login com JWT |
+| `POST /api/auth/refresh` | Refresh token |
+| `GET /api/pessoas/colaboradores` | Listar colaboradores |
+| `POST /api/pessoas/colaboradores` | Criar colaborador |
+| `PUT /api/pessoas/colaboradores/:id` | Atualizar colaborador |
+| `DELETE /api/pessoas/colaboradores/:id` | Remover colaborador |
+
+## ⚙️ Configuração
+
+### Variáveis de Ambiente
+
+```env
+# API Backend
+NEXT_PUBLIC_API_URL=http://localhost:3000/api
+
+# Modo de autenticação
+NEXT_PUBLIC_AUTH_MODE=jwt
+
+# Serviço de relatórios
+NEXT_PUBLIC_REPORT_SERVICE_URL=http://localhost:3000/api
+```
+
+## 🛠️ Scripts Disponíveis
+
+| Script | Descrição |
+|--------|-----------|
+| `npm run dev` | Desenvolvimento com hot reload |
+| `npm run dev:clean` | Limpa cache e inicia dev |
+| `npm run build` | Build de produção |
+| `npm start` | Inicia servidor de produção |
+| `npm run lint` | Executa ESLint |
+| `npm run prettier` | Formata código com Prettier |
+| `npm run type-check` | Verificação de tipos TypeScript |
+| `npm run clean` | Remove node_modules e builds |
+
+## 📝 Convenções
+
+- **Componentes**: PascalCase (ex: `UserForm.tsx`)
+- **Hooks**: camelCase com prefixo `use` (ex: `useAuth.ts`)
+- **Serviços**: camelCase com sufixo `Service` (ex: `colaboradorService.ts`)
+- **Modelos**: Interfaces com prefixo `I` (ex: `IColaborador`)
+
+## 🔒 Autenticação
+
+O template suporta dois modos de autenticação:
+
+1. **JWT** (padrão): Login com username/password
+2. **GovBR**: Integração com login gov.br (quando configurado)
+
+O token é armazenado no `localStorage` e automaticamente incluído nas requisições via interceptor Axios.
+
+## 📄 Licença
+
+MIT
