@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { AcessoControl } from '../../../infrastructure/acesso-control';
 import { CreateEnderecoDto } from '../dto/create-endereco.dto';
@@ -8,8 +8,6 @@ import { LogCoordenadaDto } from '../dto/log-coordenada.dto';
 import { EnderecoEntity } from '../entities/endereco.entity';
 import { Servico } from '../entities/enums/log-coordenada.enum';
 import { LogCoordenadaEntity } from '../entities/log-coordenada.entity';
-import { DistritoService } from './distrito.service';
-import { SubdistritoService } from './subdistrito.service';
 
 const GOOGLE_API_KEY = process.env.GOOGLE_KEY ?? null;
 
@@ -20,28 +18,12 @@ export class EnderecoService {
     private repository: Repository<EnderecoEntity>,
     @Inject('LOG_COORDENADA_REPOSITORY')
     private logCoordenadaRepository: Repository<LogCoordenadaEntity>,
-    private distritoService: DistritoService,
-    private subdistritoService: SubdistritoService,
   ) {}
-
-  static EnderecoQueryView(qb: SelectQueryBuilder<any>, alias = 'endereco') {
-    qb.leftJoin(`${alias}.cidade`, `${alias}_cidade`);
-    qb.leftJoin(`${alias}_cidade.estado`, `${alias}_cidade_estado`);
-    qb.leftJoin(`${alias}.distrito`, `${alias}_distrito`);
-    qb.leftJoin(`${alias}.subdistrito`, `${alias}_subdistrito`);
-    qb.addSelect([
-      `${alias}`,
-      `${alias}_cidade`,
-      `${alias}_cidade_estado`,
-      `${alias}_distrito`,
-      `${alias}_subdistrito`,
-    ]);
-  }
 
   async findOne(id: string): Promise<EnderecoEntity> {
     const entity = await this.repository.findOne({
       where: { id },
-      relations: ['distrito', 'subdistrito'],
+      relations: ['cidade', 'cidade.estado'],
     });
 
     if (!entity) {
@@ -62,13 +44,6 @@ export class EnderecoService {
   async createOrUpdate(data: any, id?: string): Promise<EnderecoEntity> | null {
     if (data === null) return null;
 
-    if (data.distrito) {
-      await this.distritoService.createOrUpdate(data.distrito);
-    }
-    if (data.subdistrito) {
-      await this.subdistritoService.createOrUpdate(data.subdistrito);
-    }
-
     if (id !== undefined) {
       data = await this.repository.preload({
         id: id,
@@ -84,38 +59,7 @@ export class EnderecoService {
       const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
       const info = response.data;
 
-      const distritos = await axios.get(
-        `http://servicodados.ibge.gov.br/api/v1/localidades/municipios/${info.ibge}/distritos`,
-      );
-      const distritosData = distritos.data.map((distrito) => {
-        return {
-          id: distrito.id,
-          nome: distrito.nome,
-          subdistritos: [],
-        };
-      });
-
-      const subdistritos = await axios.get(
-        `http://servicodados.ibge.gov.br/api/v1/localidades/municipios/${info.ibge}/subdistritos`,
-      );
-      const subdistritosData = subdistritos.data.map((subdistrito) => {
-        return {
-          id: subdistrito.id,
-          nome: subdistrito.nome,
-          id_distrito: subdistrito.distrito.id,
-        };
-      });
-
-      subdistritosData.forEach((subdistrito) => {
-        const distrito = distritosData.find(
-          (distrito) => distrito.id === subdistrito.id_distrito,
-        );
-        if (distrito) {
-          distrito.subdistritos.push(subdistrito);
-        }
-      });
-
-      return { info, distritos: distritosData };
+      return { info };
     } catch (error) {
       throw new NotFoundException(error);
     }
@@ -210,7 +154,7 @@ export class EnderecoService {
       servico,
       latitude,
       longitude,
-      usuario: acessoControl.currentFuncionario.usuario,
+      usuario: acessoControl.currentFuncionario?.usuario,
     });
 
     return {

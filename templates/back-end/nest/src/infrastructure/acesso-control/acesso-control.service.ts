@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ICurrentFuncionario } from '../authentication';
+import { ICurrentColaborador } from '../authentication';
 import { AuthorizationService } from '../authorization';
 import { DatabaseContextService } from '../database-context/database-context.service';
 import { AcessoControl } from './core/acesso-control';
@@ -11,17 +11,22 @@ export class AcessoControlService {
     private authorizationService: AuthorizationService,
   ) {}
 
-  //
-
-  async createAcessoControl(currentFuncionario: ICurrentFuncionario) {
+  async createAcessoControl(currentColaborador: ICurrentColaborador) {
     const authzPolicy = await this.authorizationService.getAuthzPolicy(
-      currentFuncionario,
+      currentColaborador,
     );
 
     return new AcessoControl(
-      currentFuncionario,
+      currentColaborador,
       authzPolicy,
       this.databaseContextService,
     );
+  }
+
+  /**
+   * @deprecated Use createAcessoControl instead
+   */
+  async createAcessoControlByFuncionario(currentFuncionario: ICurrentColaborador) {
+    return this.createAcessoControl(currentFuncionario);
   }
 }

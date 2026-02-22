@@ -1,38 +1,39 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
-  IsDate,
+  IsDateString,
   IsOptional,
   IsString,
   Validate,
-  ValidateNested,
 } from 'class-validator';
-import { ObjectUUIDDto } from '../../../../helpers/dtos/object-uuid.dto';
 import { EntityExist } from '../../../../helpers/validators/entity-exist';
-import { FuncionarioEntity } from '../../../pessoa/entities/funcionario.entity';
+import { ColaboradorEntity } from '../../../pessoa/entities/colaborador.entity';
 
 export class CreateIntegrationAccessTokenDto {
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  descricao: string;
+  descricao?: string;
 
-  @ApiProperty()
-  @IsDate()
+  @ApiPropertyOptional({ default: true })
   @IsOptional()
-  @Transform(({ value }) => (value ? new Date(value) : null))
-  validoAte: Date | null;
-
   @IsBoolean()
-  @ApiProperty()
-  ativo: boolean;
+  ativo?: boolean;
 
-  //
-
-  @ApiProperty({ type: ObjectUUIDDto })
-  @Validate(EntityExist, [FuncionarioEntity, 'id', 'id'])
+  @ApiPropertyOptional()
   @IsOptional()
-  @ValidateNested()
-  @Type(() => ObjectUUIDDto)
-  herdaPermissoesDeFuncionario: FuncionarioEntity | null;
+  @IsDateString()
+  validoAte?: string;
+
+  @ApiPropertyOptional({ type: () => ColaboradorEntity })
+  @IsOptional()
+  @Validate(EntityExist, [ColaboradorEntity, 'id', 'id'])
+  herdaPermissoesDeColaborador: ColaboradorEntity | null;
+
+  /**
+   * @deprecated Use herdaPermissoesDeColaborador instead
+   */
+  get herdaPermissoesDeFuncionario(): ColaboradorEntity | null {
+    return this.herdaPermissoesDeColaborador;
+  }
 }

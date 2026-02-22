@@ -1,48 +1,60 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { FuncionarioEntity } from '../../../pessoa/entities/funcionario.entity';
+import { ColaboradorEntity } from '../../../pessoa/entities/colaborador.entity';
 
 @Entity('integration_access_token')
 export class IntegrationAccessTokenEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
-  //
+  @Column({ unique: true })
+  token!: string;
 
-  @Column({ type: 'text' })
-  descricao: string;
+  @Column({ nullable: true })
+  descricao!: string;
 
-  @Column({ type: 'text' })
-  token: string;
+  @Column({ default: true })
+  ativo!: boolean;
 
-  @Column({ type: 'timestamptz' })
-  validoAte: Date | null;
+  @Column({ type: 'timestamptz', nullable: true })
+  validoAte!: Date;
 
-  @Column({ type: 'boolean' })
-  ativo: boolean;
+  @ManyToOne(() => ColaboradorEntity, { nullable: false })
+  @JoinColumn({ name: 'colaborador_autor_id' })
+  colaboradorAutor: ColaboradorEntity;
 
-  //
-
-  @ManyToOne(() => FuncionarioEntity, { nullable: false })
-  @JoinColumn({ name: 'id_funcionario_autor_fk' })
-  funcionarioAutor: FuncionarioEntity;
-
-  @ManyToOne(() => FuncionarioEntity, { nullable: true })
-  @JoinColumn({ name: 'id_herda_permissoes_de_funcionario_fk' })
-  herdaPermissoesDeFuncionario: FuncionarioEntity | null;
-
-  //
+  @ManyToOne(() => ColaboradorEntity, { nullable: true })
+  @JoinColumn({ name: 'herda_permissoes_de_colaborador_id' })
+  herdaPermissoesDeColaborador: ColaboradorEntity | null;
 
   @CreateDateColumn()
   createdAt!: Date;
 
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  @DeleteDateColumn()
+  deletedAt!: Date;
+
+  /**
+   * @deprecated Use colaboradorAutor instead
+   */
+  get funcionarioAutor(): ColaboradorEntity {
+    return this.colaboradorAutor;
+  }
+
+  /**
+   * @deprecated Use herdaPermissoesDeColaborador instead
+   */
+  get herdaPermissoesDeFuncionario(): ColaboradorEntity | null {
+    return this.herdaPermissoesDeColaborador;
+  }
 }

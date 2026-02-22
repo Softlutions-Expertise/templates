@@ -2,14 +2,13 @@ import { Allow } from 'class-validator';
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { SecretariaMunicipalEntity } from '../../secretaria-municipal/entities/secretaria-municipal.entity';
 import { CidadeEntity } from './cidade.entity';
 import { DistritoEntity } from './distrito.entity';
 import { LocalizacaoDiferencia, Zona } from './enums/endereco.enum';
@@ -69,10 +68,6 @@ export class EnderecoEntity {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  //
-
-  @OneToMany(() => SecretariaMunicipalEntity, (sm) => sm.endereco, {
-    eager: false,
-  })
-  secretariasMunicipais!: SecretariaMunicipalEntity[];
+  @DeleteDateColumn()
+  deletedAt!: Date;
 }

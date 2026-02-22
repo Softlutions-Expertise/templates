@@ -1,11 +1,11 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   JoinTable,
   ManyToMany,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -13,20 +13,19 @@ import {
 import { ContatoEntity } from '../../base/entities/contato.entity';
 import { EnderecoEntity } from '../../base/entities/endereco.entity';
 import { Nacionalidade, Raca, Sexo } from './enums/pessoa.enum';
-import { FuncionarioEntity } from './funcionario.entity';
 
 @Entity('pessoa')
 export class PessoaEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ nullable: true })
   foto!: string;
 
   @Column()
   nome!: string;
 
-  @Column()
+  @Column({ length: 11, unique: true })
   cpf!: string;
 
   @Column()
@@ -36,7 +35,7 @@ export class PessoaEntity {
   orgaoExpRg!: string;
 
   @Column({ type: 'date' })
-  dataNascimento!: string;
+  dataNascimento!: Date;
 
   @Column({ type: 'enum', enum: Sexo })
   sexo!: Sexo;
@@ -48,34 +47,32 @@ export class PessoaEntity {
     type: 'enum',
     enum: Nacionalidade,
     default: Nacionalidade.Brasileira,
+    nullable: true,
   })
   nacionalidade!: Nacionalidade;
 
   @Column()
   paisNascimento!: string;
 
-  @Column()
+  @Column({ length: 2 })
   ufNascimento!: string;
 
   @Column()
   municipioNascimento!: string;
 
-  @Column()
+  @Column({ nullable: true })
   municipioNascimentoId!: string;
 
-  @ManyToMany(() => EnderecoEntity, { cascade: ['remove'], onDelete:"CASCADE", onUpdate:"CASCADE" })
+  @ManyToMany(() => EnderecoEntity, { cascade: ['remove'] })
   @JoinTable({
     name: 'pessoa_endereco',
-    joinColumn: { name: 'pessoa_id', referencedColumnName: 'id', },
+    joinColumn: { name: 'pessoa_id', referencedColumnName: 'id' },
     inverseJoinColumn: {
       name: 'endereco_id',
       referencedColumnName: 'id',
     },
   })
   enderecos?: EnderecoEntity[];
-
-  @OneToMany(() => FuncionarioEntity, (funcionario) => funcionario.pessoa)
-  funcionario!: FuncionarioEntity[];
 
   @OneToOne(() => ContatoEntity)
   @JoinColumn({ name: 'contato_id', referencedColumnName: 'id' })
@@ -86,4 +83,7 @@ export class PessoaEntity {
 
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  @DeleteDateColumn()
+  deletedAt!: Date;
 }

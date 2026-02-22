@@ -1,11 +1,8 @@
-import { Global, Module } from '@nestjs/common';
-import { EscolaModule } from '../escola/escola.module';
-import { ReservaVagaModule } from '../reserva-vaga/reserva-vaga.module';
+import { Module } from '@nestjs/common';
 import { MailerService } from './mailer.service';
 
-@Global()
 @Module({
-  imports: [EscolaModule, ReservaVagaModule],
   providers: [MailerService],
+  exports: [MailerService],
 })
 export class MailerModule {}

@@ -1,31 +1,35 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
-import { EscolaEntity } from '../../../modules/escola/entities/escola.entity';
-import { FuncionarioEntity } from '../../../modules/pessoa/entities/funcionario.entity';
+import { ColaboradorEntity } from '../../../modules/pessoa/entities/colaborador.entity';
 import { PessoaEntity } from '../../../modules/pessoa/entities/pessoa.entity';
-import { SecretariaMunicipalEntity } from '../../../modules/secretaria-municipal/entities/secretaria-municipal.entity';
 
-export type ICurrentFuncionario =
+export type ICurrentColaborador =
   | null
   | (Pick<
-      FuncionarioEntity,
-      'id' | 'cargo' | 'tipoVinculo' 
+      ColaboradorEntity,
+      'id' | 'cargo' | 'tipoVinculo' | 'instituicaoId' | 'instituicaoNome'
     > & {
       usuario: Pick<
-        FuncionarioEntity['usuario'],
+        ColaboradorEntity['usuario'],
         'id' | 'nivelAcesso' | 'situacaoCadastral'
       >;
-
       pessoa: PessoaEntity;
-
-     secretarias?: SecretariaMunicipalEntity[] | null;
-     unidadesEscolares?: EscolaEntity[] | null;
     });
 
-export const CurrentFuncionario = createParamDecorator(
-  (_: unknown, context: ExecutionContext): ICurrentFuncionario => {
+/**
+ * @deprecated Use CurrentColaborador instead
+ */
+export type ICurrentFuncionario = ICurrentColaborador;
+
+export const CurrentColaborador = createParamDecorator(
+  (_: unknown, context: ExecutionContext): ICurrentColaborador => {
     const ctx = context.switchToHttp();
     const request = ctx.getRequest<Request>();
     return (<any>request).user || null;
   },
 );
+
+/**
+ * @deprecated Use CurrentColaborador instead
+ */
+export const CurrentFuncionario = CurrentColaborador;

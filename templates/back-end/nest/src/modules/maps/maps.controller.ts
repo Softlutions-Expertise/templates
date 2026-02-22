@@ -4,58 +4,45 @@ import { GetDoc } from '../../helpers/decorators/swagger.decorator';
 import { Roles } from '../../helpers/enums/role.enum';
 import { AcessoControl } from '../../infrastructure/acesso-control';
 import { ResolveAcessoControl } from '../../infrastructure/acesso-control/decorators';
-import { SituacaoFuncionamento } from '../escola/entities/enums/escola.enum';
 import { MapsService } from './maps.service';
 
 @ApiTags('Maps')
 @Controller('maps')
 export class MapsController {
-  constructor(private readonly mapsService: MapsService) { }
+  constructor(private readonly mapsService: MapsService) {}
 
-  @Get('escolas/cidade/:idCidade')
+  @Get('colaboradores/cidade/:cidadeId')
   @GetDoc(
-    'Escola',
+    'Colaboradores no Mapa',
     [
       Roles.Administrador,
       Roles.AdministradorMunicipal,
       Roles.AtendenteSecretaria,
       Roles.Defensoria,
       Roles.GestorDeCreche,
-      Roles.Publico,
     ].join(', '),
-    ['situacaoFuncionamento'],
   )
-  findAllEscolasByCidade(
+  findAllColaboradoresByCidade(
     @ResolveAcessoControl() acessoControl: AcessoControl,
-    @Param('idCidade') idCidade: string,
-    @Query('situacaoFuncionamento')
-    situacaoFuncionamento?: SituacaoFuncionamento,
+    @Param('cidadeId') cidadeId: string,
   ) {
-    return this.mapsService.findAllEscolasByCidade(
-      acessoControl,
-      idCidade,
-      situacaoFuncionamento,
-    );
+    return this.mapsService.findAllColaboradoresByCidade(acessoControl, cidadeId);
   }
 
-  @Get('criancas/cidade/:idCidade')
+  @Get('colaboradores')
   @GetDoc(
-    'Crianca',
+    'Colaboradores no Mapa - Todas as Cidades',
     [
       Roles.Administrador,
       Roles.AdministradorMunicipal,
       Roles.AtendenteSecretaria,
       Roles.Defensoria,
       Roles.GestorDeCreche,
-      Roles.Publico,
     ].join(', '),
-  ) findAllCriancaByCidade(
+  )
+  findAllColaboradoresWithCoordinates(
     @ResolveAcessoControl() acessoControl: AcessoControl,
-    @Param('idCidade') idCidade: string,
   ) {
-    return this.mapsService.findAllCriancaByCidade(
-      acessoControl,
-      idCidade,
-    );
+    return this.mapsService.findAllColaboradoresWithCoordinates(acessoControl);
   }
 }

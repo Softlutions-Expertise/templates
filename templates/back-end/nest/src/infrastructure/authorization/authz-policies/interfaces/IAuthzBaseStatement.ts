@@ -1,7 +1,7 @@
 import { ClassConstructor } from 'class-transformer';
 import { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 import { AcessoControl } from '../../../acesso-control';
-import { ICurrentFuncionario } from '../../../authentication';
+import { ICurrentColaborador } from '../../../authentication';
 import { DatabaseContextService } from '../../../database-context/database-context.service';
 import {
   IAuthzPolicyStatementCheck,
@@ -28,15 +28,15 @@ export type IAuthzEnsureCanPerformFn = <
 
 export type IAuthzPolicyStatementContext<Dto = unknown> = {
   acessoControl: AcessoControl;
-
   dto: Dto | null;
   databaseContextService: DatabaseContextService;
-
   populateOnlyRelatedWithProfile?: boolean;
+  currentColaborador: ICurrentColaborador | null;
 
-  currentFuncionario: ICurrentFuncionario | null;
-
-  //
+  /**
+   * @deprecated Use currentColaborador instead
+   */
+  currentFuncionario: ICurrentColaborador | null;
 
   checkCanPerform: IAuthzCheckCanPerformFn;
   ensureCanPerform: IAuthzEnsureCanPerformFn;
@@ -66,9 +66,7 @@ export type IAuthzPolicyStatementKindCheck<
 > = {
   kind: 'check';
   action: Action;
-
   getDtoClass?: () => ClassConstructor<any>;
-
   withResult: IAuthzPolicyStatementKindCheckWithResultFn<Dto>;
 };
 
@@ -79,9 +77,7 @@ export type IAuthzPolicyStatementKindFilter<
 > = {
   kind: 'filter';
   action: Action;
-
   getDtoClass?: () => ClassConstructor<any>;
-
   filter:
     | boolean
     | ((

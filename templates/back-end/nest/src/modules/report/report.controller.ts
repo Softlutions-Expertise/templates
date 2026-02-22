@@ -6,26 +6,16 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
-import { ApiExtraModels, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
 import axios from 'axios';
 import PQueue from 'p-queue';
 import { GetDoc } from '../../helpers/decorators/swagger.decorator';
 import { Roles } from '../../helpers/enums/role.enum';
 import { AcessoControl } from '../../infrastructure/acesso-control';
 import { ResolveAcessoControl } from '../../infrastructure/acesso-control/decorators';
-import { ReportAgendamentoDTO } from './dtos/report-agendamento.dto';
-import { ReportEntrevistaDTO } from './dtos/report-entrevista.dto';
-import { ReportFilaDTO } from './dtos/report-fila.dto';
-import { ReportReservaVagaDTO } from './dtos/report-reserva-vaga.dto';
-import { ReportVagaDTO } from './dtos/report-vaga.dto';
 import { ReportService } from './services/report.service';
 
 @ApiTags('Relatórios')
-@ApiExtraModels(ReportAgendamentoDTO)
-@ApiExtraModels(ReportFilaDTO)
-@ApiExtraModels(ReportVagaDTO)
-@ApiExtraModels(ReportReservaVagaDTO)
-@ApiExtraModels(ReportEntrevistaDTO)
 @Controller('report')
 export class ReportController {
   private queue = new PQueue({ concurrency: 2 });
@@ -59,13 +49,7 @@ export class ReportController {
     name: 'reportType',
     type: String,
     required: true,
-    enum: [
-      'relatorio-agendamentos',
-      'relatorio-filas',
-      'relatorio-vagas',
-      'relatorio-reservas-vagas',
-      'relatorio-entrevistas',
-    ],
+    description: 'Tipo de relatório a ser gerado',
   })
   async generateReport(
     @ResolveAcessoControl() acessoControl: AcessoControl,

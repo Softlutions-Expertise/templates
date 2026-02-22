@@ -1,99 +1,159 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { AcessoControl } from '../../infrastructure/acesso-control';
-import { SituacaoFuncionamento } from '../escola/entities/enums/escola.enum';
-import { EscolaEntity } from '../escola/entities/escola.entity';
-import { CriancaEntity } from '../pessoa/entities/crianca.entity';
+import { ColaboradorEntity } from '../pessoa/entities/colaborador.entity';
 
 @Injectable()
 export class MapsService {
   constructor(
-    @Inject('ESCOLA_REPOSITORY')
-    private escolaRepository: Repository<EscolaEntity>,
-    @Inject('CRIANCA_REPOSITORY')
-    private criancaRepository: Repository<CriancaEntity>,
-  ) { }
+    @Inject('COLABORADOR_REPOSITORY')
+    private colaboradorRepository: Repository<ColaboradorEntity>,
+  ) {}
 
-  async findAllEscolasByCidade(
+  /**
+   * Busca colaboradores com coordenadas para exibição no mapa
+   */
+  async findAllColaboradoresByCidade(
     acessoControl: AcessoControl | null,
-    idCidade: string,
-    situacaoFuncionamento?: SituacaoFuncionamento,
-  ): Promise<EscolaEntity[]> {
-    await acessoControl.ensureCanReachTarget(
-      'escola:read',
-      this.escolaRepository.createQueryBuilder('escola'),
-      null,
-    );
+    cidadeId: string,
+  ): Promise<any[]> {
+    const qb = this.colaboradorRepository.createQueryBuilder('colaborador');
 
-    const query = this.escolaRepository
-      .createQueryBuilder('escola')
-      .leftJoinAndSelect('escola.secretariaMunicipal', 'secretariaMunicipal')
-      .leftJoinAndSelect('escola.endereco', 'endereco')
-      .leftJoinAndSelect('endereco.cidade', 'cidade')
-      .leftJoinAndSelect('cidade.estado', 'estado')
-      .leftJoinAndSelect('escola.contato', 'contato')
-      .where('cidade.id = :idCidade', {
-        idCidade,
-      });
-
-    if (situacaoFuncionamento) {
-      query.andWhere('escola.situacaoFuncionamento = :situacaoFuncionamento', {
-        situacaoFuncionamento,
-      });
+    if (acessoControl) {
+      await acessoControl.applyConditionFilterToQueryBuilderByStatementAction(
+        'colaborador:read',
+        qb,
+      );
     }
 
-    query.select([
-      'escola.id',
-      'escola.nomeFantasia',
-      'escola.razaoSocial',
-      'escola.cnpjEscola',
-      'escola.situacaoFuncionamento',
-      'secretariaMunicipal.id',
-      'secretariaMunicipal.nomeFantasia',
-      'secretariaMunicipal.razaoSocial',
-      'secretariaMunicipal.cnpj',
-      'endereco',
-      'contato',
-    ]);
-
-    return query.getMany();
-  }
-
-  async findAllCriancaByCidade(
-    acessoControl: AcessoControl,
-    idCidade: string,
-  ): Promise<any[]> {
-    const qb = this.criancaRepository.createQueryBuilder('crianca');
-    console.log('maps.service - findAllCriancaByCidade - created query builder', idCidade);
-
-    await acessoControl.ensureCanReachTarget('crianca:read', qb, null);
-
-    qb.leftJoinAndSelect('crianca.endereco', 'endereco')
+    qb.leftJoinAndSelect('colaborador.pessoa', 'pessoa')
+      .leftJoinAndSelect('pessoa.enderecos', 'endereco')
       .leftJoinAndSelect('endereco.cidade', 'cidade')
-      .where('cidade.id = :idCidade', { idCidade });
+      .leftJoinAndSelect('pessoa.contato', 'contato')
+      .where('cidade.id = :cidadeId', { cidadeId })
+      .andWhere('endereco.latitude IS NOT NULL')
+      .andWhere('endereco.longitude IS NOT NULL');
 
     qb.select([
-      'crianca.id',
-      'crianca.nome',
-      'endereco',
+      'colaborador.id',
+      'colaborador.cargo',
+      'colaborador.tipoVinculo',
+      'colaborador.instituicaoNome',
+      'pessoa.id',
+      'pessoa.nome',
+      'pessoa.dataNascimento',
+      'endereco.id',
+      'endereco.logradouro',
+      'endereco.numero',
+      'endereco.bairro',
+      'endereco.latitude',
+      'endereco.longitude',
+      'cidade.id',
+      'cidade.nome',
+      'contato.id',
+      'contato.telefones',
+      'contato.emails',
     ]);
 
-    qb.addSelect(
-      `(
-        SELECT e.status 
-        FROM entrevista e 
-        WHERE e.crianca_id = crianca.id 
-        ORDER BY e.data_entrevista DESC, e.horario_agendamento DESC 
-        LIMIT 1
-      )`,
-      'ultimaEntrevistaStatus'
-    );
+    const colaboradores = await qb.getMany();
 
-    const result = await qb.getRawAndEntities();
+    // Mapear para formato mais simples para o frontend
+    return colaboradores.map((colaborador) => ({
+      id: colaborador.id,
+      nome: colaborador.pessoa?.nome,
+      cargo: colaborador.cargo,
+      tipoVinculo: colaborador.tipoVinculo,
+      instituicaoNome: colaborador.instituicaoNome,
+      dataNascimento: colaborador.pessoa?.dataNascimento,
+      endereco: colaborador.pessoa?.enderecos?.[0]
+        ? {
+            id: colaborador.pessoa.enderecos[0].id,
+            logradouro: colaborador.pessoa.enderecos[0].logradouro,
+            numero: colaborador.pessoa.enderecos[0].numero,
+            bairro: colaborador.pessoa.enderecos[0].bairro,
+            latitude: colaborador.pessoa.enderecos[0].latitude,
+            longitude: colaborador.pessoa.enderecos[0].longitude,
+            cidade: colaborador.pessoa.enderecos[0].cidade?.nome,
+          }
+        : null,
+      contato: colaborador.pessoa?.contato
+        ? {
+            telefones: colaborador.pessoa.contato.telefones,
+            emails: colaborador.pessoa.contato.emails,
+          }
+        : null,
+    }));
+  }
 
-    return result.entities.map((crianca, index) => ({
-      ...crianca,
-      status: result.raw[index]?.ultimaEntrevistaStatus || null,
+  /**
+   * Busca todos os colaboradores com coordenadas (sem filtro de cidade)
+   */
+  async findAllColaboradoresWithCoordinates(
+    acessoControl: AcessoControl | null,
+  ): Promise<any[]> {
+    const qb = this.colaboradorRepository.createQueryBuilder('colaborador');
+
+    if (acessoControl) {
+      await acessoControl.applyConditionFilterToQueryBuilderByStatementAction(
+        'colaborador:read',
+        qb,
+      );
+    }
+
+    qb.leftJoinAndSelect('colaborador.pessoa', 'pessoa')
+      .leftJoinAndSelect('pessoa.enderecos', 'endereco')
+      .leftJoinAndSelect('endereco.cidade', 'cidade')
+      .leftJoinAndSelect('pessoa.contato', 'contato')
+      .where('endereco.latitude IS NOT NULL')
+      .andWhere('endereco.longitude IS NOT NULL');
+
+    qb.select([
+      'colaborador.id',
+      'colaborador.cargo',
+      'colaborador.tipoVinculo',
+      'colaborador.instituicaoNome',
+      'pessoa.id',
+      'pessoa.nome',
+      'pessoa.dataNascimento',
+      'endereco.id',
+      'endereco.logradouro',
+      'endereco.numero',
+      'endereco.bairro',
+      'endereco.latitude',
+      'endereco.longitude',
+      'cidade.id',
+      'cidade.nome',
+      'contato.id',
+      'contato.telefones',
+      'contato.emails',
+    ]);
+
+    const colaboradores = await qb.getMany();
+
+    return colaboradores.map((colaborador) => ({
+      id: colaborador.id,
+      nome: colaborador.pessoa?.nome,
+      cargo: colaborador.cargo,
+      tipoVinculo: colaborador.tipoVinculo,
+      instituicaoNome: colaborador.instituicaoNome,
+      dataNascimento: colaborador.pessoa?.dataNascimento,
+      endereco: colaborador.pessoa?.enderecos?.[0]
+        ? {
+            id: colaborador.pessoa.enderecos[0].id,
+            logradouro: colaborador.pessoa.enderecos[0].logradouro,
+            numero: colaborador.pessoa.enderecos[0].numero,
+            bairro: colaborador.pessoa.enderecos[0].bairro,
+            latitude: colaborador.pessoa.enderecos[0].latitude,
+            longitude: colaborador.pessoa.enderecos[0].longitude,
+            cidade: colaborador.pessoa.enderecos[0].cidade?.nome,
+          }
+        : null,
+      contato: colaborador.pessoa?.contato
+        ? {
+            telefones: colaborador.pessoa.contato.telefones,
+            emails: colaborador.pessoa.contato.emails,
+          }
+        : null,
     }));
   }
 }

@@ -9,91 +9,68 @@ import {
   IntegrationAccessTokenService,
   isCDVAccessTokenV1,
 } from '../../modules/integrations/integration-access-token/integration-access-token.service';
-import { TipoVinculoInstituicao } from '../../modules/pessoa/entities/enums/pessoa.enum';
-import { FuncionarioEntity } from '../../modules/pessoa/entities/funcionario.entity';
-import { ICurrentFuncionario } from './decorators';
+import { ColaboradorEntity } from '../../modules/pessoa/entities/colaborador.entity';
+import { ICurrentColaborador } from './decorators';
 import { IdpConnectGovBrService } from './idp-connect-govbr/idp-connect-govbr.service';
 
 @Injectable()
 export class AuthenticationService {
   constructor(
     private idpConnectService: IdpConnectGovBrService,
-
     private integrationAccessTokenService: IntegrationAccessTokenService,
-
-    @Inject('FUNCIONARIO_REPOSITORY')
-    private funcionarioRepository: Repository<FuncionarioEntity>,
-  ) {
-    //
-  }
+    @Inject('COLABORADOR_REPOSITORY')
+    private colaboradorRepository: Repository<ColaboradorEntity>,
+  ) {}
 
   getOpenIdConfiguration() {
     return this.idpConnectService.getOpenIdConfiguration();
   }
 
-  private async getCurrentFuncionarioByCpf(
+  private async getCurrentColaboradorByCpf(
     cpf: string,
-  ): Promise<ICurrentFuncionario> {
-    const funcionario = await this.funcionarioRepository
-      .createQueryBuilder('funcionario')
-      .innerJoin('funcionario.pessoa', 'pessoa')
-      .innerJoin('funcionario.usuario', 'usuario')
+  ): Promise<ICurrentColaborador> {
+    const colaborador = await this.colaboradorRepository
+      .createQueryBuilder('colaborador')
+      .innerJoin('colaborador.pessoa', 'pessoa')
+      .innerJoin('colaborador.usuario', 'usuario')
       .select([
-        'funcionario.id',
-        'funcionario.cargo',
-        'funcionario.tipoVinculo',
+        'colaborador.id',
+        'colaborador.cargo',
+        'colaborador.tipoVinculo',
+        'colaborador.instituicaoId',
+        'colaborador.instituicaoNome',
         'pessoa',
         'usuario.id',
         'usuario.nivelAcesso',
         'usuario.situacaoCadastral',
       ])
-      .leftJoinAndSelect(
-        'funcionario.unidadesEscolares',
-        'escola',
-        'funcionario.tipoVinculo = :tipoVinculoEscola',
-        { tipoVinculoEscola: TipoVinculoInstituicao.UnidadeEscolar },
-      )
-      .leftJoinAndSelect('escola.secretariaMunicipal', 'escolaSecretarias')
-      .leftJoinAndSelect('escola.endereco', 'escolaEndereco')
-      .leftJoinAndSelect(
-        'funcionario.secretarias',
-        'secretaria',
-        'funcionario.tipoVinculo = :tipoVinculoSecretaria',
-        { tipoVinculoSecretaria: TipoVinculoInstituicao.SecretariaMunicipal },
-      )
-      .leftJoinAndSelect('secretaria.endereco', 'secretariaEndereco')
       .where('pessoa.cpf = :cpf', { cpf })
       .getOne();
 
-    if (funcionario) {
+    if (colaborador) {
       return {
-        id: funcionario.id,
-
-        cargo: funcionario.cargo,
-
-        tipoVinculo: funcionario.tipoVinculo,
-
-        pessoa: funcionario.pessoa,
-
-        unidadesEscolares: funcionario.unidadesEscolares,
-        secretarias: funcionario.secretarias,
-
+        id: colaborador.id,
+        cargo: colaborador.cargo,
+        tipoVinculo: colaborador.tipoVinculo,
+        instituicaoId: colaborador.instituicaoId,
+        instituicaoNome: colaborador.instituicaoNome,
+        pessoa: colaborador.pessoa,
         usuario: {
-          id: funcionario.usuario.id,
-          nivelAcesso: funcionario.usuario.nivelAcesso,
-          situacaoCadastral: funcionario.usuario.situacaoCadastral,
+          id: colaborador.usuario.id,
+          nivelAcesso: colaborador.usuario.nivelAcesso,
+          situacaoCadastral: colaborador.usuario.situacaoCadastral,
         },
       };
     }
 
     throw new ForbiddenException(
-      'O funcionário não possui perfil no sistema da fila de espera.',
+      'O colaborador não possui perfil no sistema.',
     );
   }
 
-  async getCurrentFuncionarioByAccessToken(
+  async getCurrentColaboradorByAccessToken(
     accessToken?: string,
-  ): Promise<ICurrentFuncionario> {
+  ): Promise<ICurrentColaborador> {
     if (typeof accessToken === 'string') {
       if (isCDVAccessTokenV1(accessToken)) {
         const integrationAccessToken =
@@ -121,20 +98,20 @@ export class AuthenticationService {
 
         if (!integrationAccessToken.herdaPermissoesDeFuncionario) {
           throw new UnauthorizedException(
-            'Unsupported Integration Access Token: herdaPermissoesDeFuncionario is required.',
+            'Unsupported Integration Access Token: herdaPermissoesDeColaborador is required.',
           );
         }
 
         const cpf =
           integrationAccessToken.herdaPermissoesDeFuncionario.pessoa.cpf;
 
-        return this.getCurrentFuncionarioByCpf(cpf);
+        return this.getCurrentColaboradorByCpf(cpf);
       } else if (process.env.ENABLE_MOCK_ACCESS_TOKEN === 'true') {
         const cpfMockMatch = accessToken.match(/^mock\.cpf\.(\d{11})$/);
 
         if (cpfMockMatch) {
           const cpf = cpfMockMatch[1];
-          return this.getCurrentFuncionarioByCpf(cpf);
+          return this.getCurrentColaboradorByCpf(cpf);
         }
       }
 
@@ -142,9 +119,18 @@ export class AuthenticationService {
         accessToken,
       );
 
-      return this.getCurrentFuncionarioByCpf(cpf);
+      return this.getCurrentColaboradorByCpf(cpf);
     }
 
     return null;
+  }
+
+  /**
+   * @deprecated Use getCurrentColaboradorByAccessToken instead
+   */
+  async getCurrentFuncionarioByAccessToken(
+    accessToken?: string,
+  ): Promise<ICurrentColaborador> {
+    return this.getCurrentColaboradorByAccessToken(accessToken);
   }
 }

@@ -120,56 +120,11 @@ export enum TipoVinculoInstituicao {
 }
 
 export enum Cargo {
-  /**
-   * Nível de Acesso:
-   * - Administrador Master
-   * Vínculo com Unidade Escolar ou Secretaria?
-   * - Sem Vinculo
-   */
-  'Administrador TCE' = 'Administrador TCE',
-  'Administrador Defensoria' = 'Administrador Defensoria',
-  /**
-   * Nível de Acesso:
-   * - Administrador Secretaria Municipal
-   * Vínculo com Unidade Escolar ou Secretaria?
-   * - Secretaria de Educação
-   */
-  'Secretário(a) de Educação' = 'Secretário(a) de Educação',
-  'Gestor da Central de Vagas' = 'Gestor da Central de Vagas',
-  /**
-   * Nível de Acesso:
-   * - Defensoria
-   * Vínculo com Unidade Escolar ou Secretaria?
-   * - Sem Vinculo
-   */
-  'Defensor Público' = 'Defensor Público',
-  'Assessor(a) da Defensoria' = 'Assessor(a) da Defensoria',
-  'Analista da Defensoria' = 'Analista da Defensoria',
-  'Técnico da Defensoria' = 'Técnico da Defensoria',
-  //
-  /**
-   * Nível de Acesso:
-   * - Atendente Secretaria
-   * Vínculo com Unidade Escolar ou Secretaria?
-   * - Secretaria Municipal
-   */
-  'Assistente Administrativo' = 'Assistente Administrativo',
-  'Auxiliar Administrativo' = 'Auxiliar Administrativo',
-  'Atendente' = 'Atendente',
-  'Assessor' = 'Assessor',
-  //
-  /**
-   * Nível de Acesso:
-   * - Administrador Unidade Escolar
-   * Vínculo com Unidade Escolar ou Secretaria?
-   * - Unidade Escolar
-   */
-  'Técnico em Educação' = 'Técnico em Educação',
-  'Analista em Educação' = 'Analista em Educação',
-  'Diretor(a)' = 'Diretor(a)',
-  'Secretário(a)' = 'Secretário(a)',
-  'Coordenador(a) Pedagógico' = 'Coordenador(a) Pedagógico',
-  //
+  AdministradorSistema = 'Administrador Sistema',
+  Gestor = 'Gestor',
+  Analista = 'Analista',
+  Operador = 'Operador',
+  Outro = 'Outro',
 }
 
 export enum NivelAcesso {

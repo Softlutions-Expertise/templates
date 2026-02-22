@@ -9,11 +9,9 @@ import {
 } from '../../../helpers/paginate-utils';
 import { AcessoControl } from '../../../infrastructure/acesso-control';
 import { DatabaseContextService } from '../../../infrastructure/database-context/database-context.service';
-import { FuncionarioEntity } from '../../pessoa/entities/funcionario.entity';
 import { CreateIntegrationAccessTokenDto } from './dto/create-integration-access-token.dto';
 import { UpdateIntegrationAccessTokenDto } from './dto/update-integration-access-token.dto';
 import { IntegrationAccessTokenEntity } from './entities/integration-access-token.entity';
-import { create } from 'node:domain';
 
 export const CDV_AT_V1_RANDOM_BYTES = 32;
 export const CDV_AT_V1_PREFIX = `cdv_at-v1-`;
@@ -42,11 +40,10 @@ export class IntegrationAccessTokenService {
     const target = await this.repository.findOne({
       where: { token },
       relations: {
-        funcionarioAutor: {
+        colaboradorAutor: {
           pessoa: true,
         },
-
-        herdaPermissoesDeFuncionario: {
+        herdaPermissoesDeColaborador: {
           pessoa: true,
         },
       },
@@ -85,14 +82,10 @@ export class IntegrationAccessTokenService {
   ) {
     const token = await this.generateNewV1Token();
 
-    const funcionarioAutor = <FuncionarioEntity>{
-      id: acessoControl.currentFuncionario.id,
-    };
-
     const data: Partial<IntegrationAccessTokenEntity> = {
       ...dto,
       token,
-      funcionarioAutor,
+      colaboradorAutor: { id: acessoControl.currentColaborador.id },
     };
 
     const integrationAccessToken = await this.repository.save({
@@ -120,7 +113,7 @@ export class IntegrationAccessTokenService {
     const preloadedEntity = await this.repository.preload({
       ...currentEntity,
       ...data,
-      funcionarioAutor: currentEntity.funcionarioAutor,
+      colaboradorAutor: currentEntity.colaboradorAutor,
       id,
     });
 
@@ -136,11 +129,10 @@ export class IntegrationAccessTokenService {
     const entity = await this.repository.findOne({
       where: { id },
       relations: {
-        funcionarioAutor: {
+        colaboradorAutor: {
           pessoa: true,
         },
-
-        herdaPermissoesDeFuncionario: {
+        herdaPermissoesDeColaborador: {
           pessoa: true,
         },
       },
@@ -176,38 +168,28 @@ export class IntegrationAccessTokenService {
 
     return paginate(query, qb, {
       ...paginateConfig,
-
       sortableColumns: [
         'descricao',
         'validoAte',
-
         'createdAt',
         'updatedAt',
-
-        'funcionarioAutor.pessoa.nome',
-        'herdaPermissoesDeFuncionario.pessoa.nome',
+        'colaboradorAutor.pessoa.nome',
+        'herdaPermissoesDeColaborador.pessoa.nome',
       ],
-
       relations: {
-        funcionarioAutor: {
+        colaboradorAutor: {
           pessoa: true,
         },
-
-        herdaPermissoesDeFuncionario: {
+        herdaPermissoesDeColaborador: {
           pessoa: true,
         },
       },
-
       defaultSortBy: [['createdAt', 'DESC']],
-
       searchableColumns: ['descricao'],
-
       filterableColumns: {
         id: FULL_COMPARE_ENUMERABLE,
-
-        'funcionarioAutor.id': FULL_COMPARE_ENUMERABLE,
-        'herdaPermissoesDeFuncionario.id': FULL_COMPARE_ENUMERABLE,
-
+        'colaboradorAutor.id': FULL_COMPARE_ENUMERABLE,
+        'herdaPermissoesDeColaborador.id': FULL_COMPARE_ENUMERABLE,
         validoAte: FULL_COMPARE_NUMERIC,
         createdAt: FULL_COMPARE_NUMERIC,
       },

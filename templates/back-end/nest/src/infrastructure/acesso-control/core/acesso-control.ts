@@ -1,14 +1,6 @@
-import { ForbiddenException, NotImplementedException } from '@nestjs/common';
-import {
-  FindOperator,
-  In,
-  IsNull,
-  Not,
-  ObjectLiteral,
-  SelectQueryBuilder,
-} from 'typeorm';
-import { IMaybeString } from '../../../helpers/typings';
-import { ICurrentFuncionario } from '../../authentication';
+import { ForbiddenException } from '@nestjs/common';
+import { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
+import { ICurrentColaborador } from '../../authentication';
 import {
   IAuthzPolicy,
   IAuthzPolicyStatement,
@@ -27,90 +19,16 @@ const statementStatic = (statement: IAuthzPolicyStatement) =>
 
 export class AcessoControl {
   constructor(
-    readonly currentFuncionario: ICurrentFuncionario,
+    readonly currentColaborador: ICurrentColaborador,
     private readonly authzPolicy: IAuthzPolicy,
     private readonly databaseContextService: DatabaseContextService,
   ) {}
 
-  static async resolveProfile(
-    acessoControl: AcessoControl,
-    filterEecretariaId: IMaybeString,
-    filterEscolaId: IMaybeString,
-    filterLocalAtendimentoId?: IMaybeString,
-  ) {
-    //
-
-    const { currentFuncionario } = acessoControl;
-
-    //
-
-    let targetLocaisAtendimentosIds: string[] | null = [filterLocalAtendimentoId];
-    let targetEscolasIds: string[] | null = [filterEscolaId];
-    let targetSecretariasMunicipaisId: string[] | null = [filterEecretariaId];
-
-    if (currentFuncionario.unidadesEscolares?.length > 0) {
-      const usuarioEscolasIds = currentFuncionario.unidadesEscolares.map(
-        (escola) => escola.id,
-      );
-
-      targetEscolasIds = usuarioEscolasIds.filter((id) => {
-        if (filterEscolaId) {
-          return id === filterEscolaId;
-        }
-
-        return true;
-      });
-    }
-
-
-
-    targetEscolasIds = targetEscolasIds.filter((id) => {
-      return typeof id === 'string';
-    });
-
-    if (targetEscolasIds.length === 0) {
-      targetEscolasIds = null;
-    }
-
-    if (currentFuncionario.secretarias?.length > 0) {
-      const usuarioSecretariasIds = currentFuncionario.secretarias.map(
-        (secretaria) => secretaria.id,
-      );
-
-      targetSecretariasMunicipaisId = usuarioSecretariasIds.filter((id) => {
-        if (filterEecretariaId) {
-          return id === filterEecretariaId;
-        }
-
-        return true;
-      });
-    }
-
-    targetSecretariasMunicipaisId = targetSecretariasMunicipaisId.filter(
-      (id) => {
-        return typeof id === 'string';
-      },
-    );
-
-    if (targetSecretariasMunicipaisId.length === 0) {
-      targetSecretariasMunicipaisId = null;
-    }
-
-
-    targetLocaisAtendimentosIds = targetLocaisAtendimentosIds.filter((id) => {
-      return typeof id === 'string';
-    });
-
-    if (targetLocaisAtendimentosIds.length === 0) {
-      targetLocaisAtendimentosIds = null;
-    }
-
-
-    return {
-      targetEscolasIds,
-      targetSecretariasMunicipaisId,
-      targetLocaisAtendimentosIds,
-    };
+  /**
+   * @deprecated Use currentColaborador instead
+   */
+  get currentFuncionario() {
+    return this.currentColaborador;
   }
 
   getStatementForAction(action: IAuthzPolicyStatement['action']) {
@@ -145,20 +63,16 @@ export class AcessoControl {
 
   async getWhoAmI() {
     return {
-      funcionario: this.currentFuncionario,
-
+      colaborador: this.currentColaborador,
       authzPolicy: await this.authzPolicy.publicWhoAmI(
         await this.createContext(null),
       ),
-
       permissions: {
         static: await this.getStaticPermissions(),
         dynamic: await this.getDynamicPermissions(),
       },
     };
   }
-
-  //
 
   private async createContext(
     dto = null,
@@ -168,10 +82,9 @@ export class AcessoControl {
       acessoControl: this,
       dto,
       populateOnlyRelatedWithProfile,
-      //
-      currentFuncionario: this.currentFuncionario,
+      currentColaborador: this.currentColaborador,
+      currentFuncionario: this.currentColaborador,
       databaseContextService: this.databaseContextService,
-      //
       checkCanPerform: this.checkCanPerform.bind(this),
       ensureCanPerform: this.ensureCanPerform.bind(this),
       checkCanReachTarget: this.checkCanReachTarget.bind(this),
@@ -179,8 +92,6 @@ export class AcessoControl {
 
     return context;
   }
-
-  //
 
   private async getStatementCheckResult(
     statementForAction: IAuthzPolicyStatement,
@@ -229,8 +140,6 @@ export class AcessoControl {
       );
     }
   }
-
-  //
 
   async createQueryBuilderConditionFilterFactoryByStatement<
     Statement extends IAuthzPolicyStatement | null,
@@ -326,108 +235,17 @@ export class AcessoControl {
     Action extends Statement['action'],
   >(action: Action) {
     switch (action) {
-      case 'secretaria:read':
-      case 'secretaria:update':
-      case 'secretaria:delete':
-      case 'secretaria:criterios:read':
-      case 'secretaria:criterios:change':
-      case 'secretaria:gerencia_agendamento:update':
-      case 'secretaria:gerencia_agendamento:read': {
-        return this.databaseContextService.secretariaMunicipalRepository.createQueryBuilder(
-          'secretaria',
-        );
-      }
-
-      case 'escola:read':
-      case 'escola:delete':
-      case 'escola:update': {
-        return this.databaseContextService.escolaRepository.createQueryBuilder(
-          'escola',
-        );
-      }
-
-      case 'agendamento:read':
-      case 'agendamento:delete':
-      case 'agendamento:update': {
-        return this.databaseContextService.agendamentoRepository.createQueryBuilder(
-          'agendamento',
-        );
-      }
-
-      case 'entrevista:read':
-      case 'entrevista:delete':
-      case 'entrevista:update': {
-        return this.databaseContextService.entrevistaRepository.createQueryBuilder(
-          'entrevista',
-        );
-      }
-
-      case 'registro_contato:read':
-      case 'registro_contato:delete':
-      case 'registro_contato:update': {
-        return this.databaseContextService.registrarContatoRepository.createQueryBuilder(
-          'registro_contato ',
-        );
-      }
-
-      case 'turma:read':
-      case 'turma:delete':
-      case 'turma:update': {
-        return this.databaseContextService.turmaRepository.createQueryBuilder(
-          'turma',
-        );
-      }
-
-      case 'servidor:read':
-      case 'servidor:delete':
-      case 'servidor:update': {
-        return this.databaseContextService.funcionarioRepository.createQueryBuilder(
-          'funcionario',
-        );
-      }
-
-      case 'registro_vaga:read': {
-        return this.databaseContextService.registroVagaRepository.createQueryBuilder(
-          'registro_vaga',
-        );
-      }
-
-      case 'vaga:read':
-      case 'vaga:delete':
-      case 'vaga:update': {
-        return this.databaseContextService.vagaRepository.createQueryBuilder(
-          'vaga',
-        );
-      }
-
-      case 'fila:read': {
-        return this.databaseContextService.filaRepository.createQueryBuilder(
-          'fila',
-        );
-      }
-
-      case 'criterio:read': {
-        return this.databaseContextService.criterioRepository.createQueryBuilder(
-          'criterio',
-        );
-      }
-
-      case 'reserva_vaga:read':
-      case 'reserva_vaga:delete':
-      case 'reserva_vaga:update':
-      case 'reserva_vaga:update:status': {
-        return this.databaseContextService.reservaVagaRepository.createQueryBuilder(
-          'reserva_vaga',
+      case 'colaborador:read':
+      case 'colaborador:delete':
+      case 'colaborador:update': {
+        return this.databaseContextService.colaboradorRepository.createQueryBuilder(
+          'colaborador',
         );
       }
 
       default: {
-        console.warn(
-          `AuthService#getQueryBuilderForAction: não implementado para a action '${action}'.`,
-        );
-
-        throw new NotImplementedException(
-          `AuthService#getQueryBuilderForAction: não implementado para a action '${action}'.`,
+        throw new Error(
+          `AcessoControl#getQueryBuilderForAction: não implementado para a action '${action}'.`,
         );
       }
     }
@@ -477,38 +295,6 @@ export class AcessoControl {
     );
     const rows = await qb.select([`${qb.alias}.id`]).getMany();
     return rows.map((row) => row.id);
-  }
-
-  async getReachableTargetsTypeorm<
-    Entity extends ObjectLiteral,
-    Statement extends IAuthzPolicyStatementFilter = IAuthzPolicyStatementFilter,
-    Action extends Statement['action'] = Statement['action'],
-  >(
-    action: Action,
-    qb: SelectQueryBuilder<Entity>,
-    populateOnlyRelatedWithProfile = false,
-  ): Promise<FindOperator<any> | undefined> {
-    await this.applyConditionFilterToQueryBuilderByStatementAction(
-      action,
-      qb,
-      populateOnlyRelatedWithProfile,
-    );
-
-    if (qb.expressionMap.wheres.length === 1) {
-      const [where] = qb.expressionMap.wheres;
-
-      if (where.type === 'simple') {
-        if (where.condition === 'TRUE') {
-          return Not(IsNull());
-        } else {
-          return IsNull();
-        }
-      }
-    }
-
-    const rows = await qb.select([`${qb.alias}.id`]).getMany();
-    const ids = rows.map((row) => row.id);
-    return In(ids);
   }
 
   async ensureCanReachTarget<

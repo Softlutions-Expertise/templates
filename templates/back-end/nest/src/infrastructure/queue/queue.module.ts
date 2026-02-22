@@ -1,27 +1,14 @@
 import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bull';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { FilaQueueService } from './fila-queue.service';
 
+/**
+ * Módulo de Queue - Template para implementação de filas
+ * 
+ * Este módulo serve como base para implementar processamento assíncrono.
+ * Configure conforme necessário (Bull, BullMQ, etc.)
+ */
 @Module({
-  imports: [
-    ConfigModule,
-    BullModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        redis: {
-          host: configService.get('REDIS_HOST', 'redis'),
-          port: configService.get('REDIS_PORT', 6379),
-          password: configService.get('REDIS_PASSWORD'),
-        },
-      }),
-      inject: [ConfigService],
-    }),
-    BullModule.registerQueue({
-      name: 'fila-generation',
-    }),
-  ],
-  providers: [FilaQueueService],
-  exports: [FilaQueueService],
+  imports: [],
+  providers: [],
+  exports: [],
 })
 export class QueueModule {}

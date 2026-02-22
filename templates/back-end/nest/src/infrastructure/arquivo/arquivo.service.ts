@@ -11,7 +11,6 @@ import * as sharp from 'sharp';
 import slug from 'slug';
 import { v4 } from 'uuid';
 import { AcessoControl } from '../acesso-control';
-import { DatabaseContextService } from '../database-context/database-context.service';
 import { MinioClient } from './minio/providers/minio-client.provider';
 
 interface ArquivoServiceMetadataInput {
@@ -34,18 +33,18 @@ const base64ToBuffer = (base64: string) => {
   };
 };
 
-enum FileKind {
+/**
+ * Enum com os tipos de arquivo suportados.
+ * Adicione novos tipos conforme necessário.
+ */
+export enum FileKind {
   PESSOA_FOTO_PERFIL = 'v1/pessoa/foto-perfil',
-  ESCOLA_FOTO_PRINCIPAL = 'v1/escola/foto-principal',
-  SECRETARIA_MUNICIPAL_LOGO = 'v1/secretaria-municipal/logo',
-  ENTREVISTA_COMPROVANTE_CRITERIO = 'v1/entrevista/comprovante-criterio',
-  REGISTRO_CONTATO = 'v1/entrevista/registrar-contato',
+  GENERICO_DOCUMENTO = 'v1/generico/documento',
 }
 
 type IObjectMetadataBase = {
   'mime-type': string;
   'file-name': string;
-
   date: string;
   'actor-id': string | null;
 };
@@ -55,57 +54,27 @@ type IObjectMetadataKindPessoaFotoPerfil = IObjectMetadataBase & {
   'pessoa-id': string;
 };
 
-type IObjectMetadataKindEscolaFotoPrincipal = IObjectMetadataBase & {
-  kind: FileKind.ESCOLA_FOTO_PRINCIPAL;
-  'escola-id': string;
-};
-
-type IObjectMetadataKindSecretariaMunicipalLogo = IObjectMetadataBase & {
-  kind: FileKind.SECRETARIA_MUNICIPAL_LOGO;
-  'secretaria-municipal-id': string;
-};
-
-type IObjectMetadataKindEntrevistaComprovanteCriterio = IObjectMetadataBase & {
-  kind: FileKind.ENTREVISTA_COMPROVANTE_CRITERIO;
-  'criterio-id': string;
-  'entrevista-id': string;
-};
-
-type IObjectMetadataKindContatoRegistro = IObjectMetadataBase & {
-  kind: FileKind.REGISTRO_CONTATO;
-  'contato-id': string;
+type IObjectMetadataKindGenericoDocumento = IObjectMetadataBase & {
+  kind: FileKind.GENERICO_DOCUMENTO;
+  'documento-id': string;
+  'entidade-tipo': string;
+  'entidade-id': string;
 };
 
 type IObjectMetadata =
   | IObjectMetadataKindPessoaFotoPerfil
-  | IObjectMetadataKindEscolaFotoPrincipal
-  | IObjectMetadataKindSecretariaMunicipalLogo
-  | IObjectMetadataKindEntrevistaComprovanteCriterio
-  | IObjectMetadataKindContatoRegistro;
+  | IObjectMetadataKindGenericoDocumento;
 
 const buildObjectNamePessoa = (idPessoa: string) => {
   return `pessoa::${idPessoa}::foto-perfil::${v4()}`;
 };
 
-const buildObjectNameEscolaFotoPrincipal = (idEscola: string) => {
-  return `escola::${idEscola}::foto-principal::${v4()}`;
-};
-
-const buildObjectNameSecretariaMunicipalLogo = (
-  idSecretariaMunicipal: string,
+const buildObjectNameGenericoDocumento = (
+  entidadeTipo: string,
+  entidadeId: string,
+  documentoId: string,
 ) => {
-  return `secretaria-municipal::${idSecretariaMunicipal}::logo::${v4()}`;
-};
-
-const buildObjectNameEntrevistaCriterio = (
-  idEntrevista: string,
-  idCriterio: string,
-) => {
-  return `entrevista::${idEntrevista}::comprovantes-criterios::${idCriterio}::${v4()}`;
-};
-
-const buildObjectNameContato = (idContato: string) => {
-  return `registro-contato::${idContato}::comprovante::${v4()}`;
+  return `generico::${entidadeTipo}::${entidadeId}::documento::${documentoId}::${v4()}`;
 };
 
 class ForbiddenFileViewException extends ForbiddenException {
@@ -159,26 +128,18 @@ export class ArquivoService {
   }
 
   constructor(
-    private databaseContextService: DatabaseContextService,
-
     @Inject(MinioClient)
     private minioClient: MinioClient,
-  ) { }
+  ) {}
 
   get bucketName() {
     return process.env.MINIO_BUCKET_NAME;
   }
 
-  get arquivoRepository() {
-    return this.databaseContextService.arquivoRepository;
-  }
-
   private uploadFromBuffer(
     actorId: string | null,
-
     objectName: string,
     buffer: Buffer,
-
     metadata: ItemBucketMetadata,
   ) {
     const MAX_RETRIES = 3;
@@ -188,7 +149,7 @@ export class ArquivoService {
         return this.#submitImageQueue.add(() => {
           if (tentativa > 1) {
             console.log(
-              `tentando enviar imagem... [${tentativa - 1}/${MAX_RETRIES}]`,
+              `tentando enviar arquivo... [${tentativa - 1}/${MAX_RETRIES}]`,
             );
           }
 
@@ -212,7 +173,7 @@ export class ArquivoService {
         retries: MAX_RETRIES,
         onFailedAttempt(error) {
           console.debug(error);
-          console.trace('erro ao enviar imagem');
+          console.trace('erro ao enviar arquivo');
         },
       },
     );
@@ -220,10 +181,8 @@ export class ArquivoService {
 
   private uploadFromBase64(
     actorId: string | null,
-
     objectName: string,
     base64: string,
-
     metadata: ItemBucketMetadata,
   ) {
     const { buffer } = base64ToBuffer(base64);
@@ -261,6 +220,9 @@ export class ArquivoService {
     return objectName;
   }
 
+  /**
+   * Faz upload de foto de perfil de uma pessoa
+   */
   async uploadProfilePictureFromBase64(
     acessoControl: AcessoControl | null,
     idPessoa: string,
@@ -282,65 +244,21 @@ export class ArquivoService {
     return objectName;
   }
 
-  async uploadSchoolPictureFromBase64(
+  /**
+   * Faz upload de documento genérico vinculado a uma entidade
+   */
+  async uploadDocumentoFromBase64(
     acessoControl: AcessoControl | null,
-    idEscola: string,
+    entidadeTipo: string,
+    entidadeId: string,
+    documentoId: string,
     base64: string,
-  ) {
-    const objectName = buildObjectNameEscolaFotoPrincipal(idEscola);
-
-    await this.uploadPictureFromBase64(
-      acessoControl,
-      objectName,
-      base64,
-      `funcionario-${idEscola}-foto-principal`,
-      {
-        kind: FileKind.ESCOLA_FOTO_PRINCIPAL,
-        'escola-id': idEscola,
-      },
-    );
-
-    return objectName;
-  }
-
-  async uploadSecretariaMunicipalLogoFromBase64(
-    acessoControl: AcessoControl | null,
-    idSecretariaMunicipal: string,
-    base64: string,
-  ) {
-    const objectName = buildObjectNameSecretariaMunicipalLogo(
-      idSecretariaMunicipal,
-    );
-
-    await this.uploadPictureFromBase64(
-      acessoControl,
-      objectName,
-      base64,
-      `secretaria-municipal-${idSecretariaMunicipal}-logo`,
-      {
-        kind: FileKind.SECRETARIA_MUNICIPAL_LOGO,
-        'secretaria-id': idSecretariaMunicipal,
-      },
-    );
-
-    return objectName;
-  }
-
-  async uploadInterviewCriterionFromBase64(
-    acessoControl: AcessoControl | null,
-
-    idEntrevista: string,
-    idCriterio: string,
-
-    base64: string,
-
     arquivoMeta: ArquivoServiceMetadataInput,
-
-    createFile = true,
   ) {
-    const objectName = buildObjectNameEntrevistaCriterio(
-      idEntrevista,
-      idCriterio,
+    const objectName = buildObjectNameGenericoDocumento(
+      entidadeTipo,
+      entidadeId,
+      documentoId,
     );
 
     await this.uploadFromBase64(
@@ -348,50 +266,33 @@ export class ArquivoService {
       objectName,
       base64,
       {
-        kind: FileKind.ENTREVISTA_COMPROVANTE_CRITERIO,
-
-        'criterio-id': idCriterio,
-        'entrevista-id': idEntrevista,
-
+        kind: FileKind.GENERICO_DOCUMENTO,
+        'entidade-tipo': entidadeTipo,
+        'entidade-id': entidadeId,
+        'documento-id': documentoId,
         'mime-type': arquivoMeta.tipoArquivo,
         'file-name': arquivoMeta.nomeArquivo,
       },
     );
 
-    const arquivo = this.databaseContextService.arquivoRepository.create({
-      id: v4(),
-
-      nomeArquivo: arquivoMeta.nomeArquivo,
-      tipoArquivo: arquivoMeta.tipoArquivo,
-      nameSizeFile: arquivoMeta.nameSizeFile,
-      byteString: arquivoMeta.byteString,
-
-      accessToken: objectName,
-    });
-
-    if (createFile) {
-      await this.databaseContextService.arquivoRepository.save(arquivo);
-    }
-
-    return { arquivo, objectName };
+    return objectName;
   }
 
-  async uploadRegistroContato(acessoControl: AcessoControl | null, idContato: string, base64: string) {
-    const objectName = buildObjectNameContato(idContato);
-    //TODO ajsutar pada qualquer tipod e arquivo
-    await this.uploadPictureFromBase64(
-      acessoControl,
+  /**
+   * Faz upload de arquivo genérico (qualquer tipo)
+   */
+  async uploadArquivoGenerico(
+    acessoControl: AcessoControl | null,
+    objectName: string,
+    buffer: Buffer,
+    metadata: ItemBucketMetadata,
+  ) {
+    return this.uploadFromBuffer(
+      acessoControl?.currentFuncionario?.id,
       objectName,
-      base64,
-      `registro-contato-${idContato}-comprovante`,
-      {
-        kind: FileKind.REGISTRO_CONTATO,
-        'contato-id': idContato,
-
-      },
+      buffer,
+      metadata,
     );
-
-    return objectName;
   }
 
   private async getFileObject(objectName: string) {
@@ -405,9 +306,7 @@ export class ArquivoService {
 
       return {
         stat,
-
         meta,
-
         getStream: () => {
           return this.minioClient.getObject(this.bucketName, objectName);
         },
@@ -429,71 +328,30 @@ export class ArquivoService {
 
     if (acessoControl) {
       switch (file.meta.kind) {
-        case FileKind.ESCOLA_FOTO_PRINCIPAL: {
-          await acessoControl.ensureCanReachTarget(
-            'escola:read',
-            null,
-            file.meta['escola-id'],
-          );
-          break;
-        }
-
-        case FileKind.SECRETARIA_MUNICIPAL_LOGO: {
-          await acessoControl.ensureCanReachTarget(
-            'secretaria:read',
-            null,
-            file.meta['secretaria-municipal-id'],
-          );
-          break;
-        }
-
         case FileKind.PESSOA_FOTO_PERFIL: {
-          const funcionario =
-            await this.databaseContextService.funcionarioRepository
-              .createQueryBuilder('funcionario')
-              .innerJoin('funcionario.pessoa', 'pessoa')
-              .where('pessoa.id = :idPessoa', {
-                idPessoa: file.meta['pessoa-id'],
-              })
-              .select('funcionario.id')
-              .getOne();
-
-          if (funcionario) {
-            await acessoControl.ensureCanReachTarget(
-              'servidor:read',
-              null,
-              funcionario.id,
-            );
-
-            break;
-          }
-
-          throw new ForbiddenFileViewException(file.meta);
-        }
-
-        case FileKind.ENTREVISTA_COMPROVANTE_CRITERIO: {
+          // Verifica se o usuário tem permissão para ver a foto da pessoa
           await acessoControl.ensureCanReachTarget(
-            'entrevista:read',
+            'pessoa:read',
             null,
-            file.meta['entrevista-id'],
+            file.meta['pessoa-id'],
           );
-
           break;
         }
 
-        case FileKind.REGISTRO_CONTATO: {
+        case FileKind.GENERICO_DOCUMENTO: {
+          // Verifica permissão baseada no tipo de entidade
+          const entidadeTipo = file.meta['entidade-tipo'];
           await acessoControl.ensureCanReachTarget(
-            'registro_contato:read',
+            `${entidadeTipo}:read`,
             null,
-            file.meta['registro-contato-id'],
+            file.meta['entidade-id'],
           );
-
           break;
         }
 
         default: {
           throw new NotImplementedException(
-            `Validação de acesso não implementada para recurso "${file.meta}".`,
+            `Validação de acesso não implementada para recurso "${file.meta.kind}".`,
           );
         }
       }
@@ -514,5 +372,19 @@ export class ArquivoService {
       stream,
       headers,
     };
+  }
+
+  /**
+   * Gera URL pré-assinada para acesso temporário ao arquivo
+   */
+  async getPresignedUrl(
+    objectName: string,
+    expirySeconds: number = 3600,
+  ): Promise<string> {
+    return this.minioClient.presignedGetObject(
+      this.bucketName,
+      objectName,
+      expirySeconds,
+    );
   }
 }
